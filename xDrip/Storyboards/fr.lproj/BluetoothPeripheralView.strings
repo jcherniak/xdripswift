@@ -1,0 +1,79 @@
+"address" = "Adresse";
+"status" = "Statut";
+"connected" = "Connecté";
+"notConnected" = "Non Connecté";
+"donotconnect" = "Stopper Scan";
+"selectAliasText" = "Choisir un alias pour ce périphérique bluetooth. Ce nom s'affiche dans l'application et est plus facile à reconnaitre.";
+"aliasAlreadyExists" = "Il y a déjà un périphérique avec cet alias";
+"confirmDeletionPeripheral" = "Voulez-vous supprimer ce périphérique: ";
+"bluetoothPeripheralAlias" = "Alias";
+"SensorSerialNumber" = "Numéro de série";
+"serialNumber" = "Numéro de série";
+"battery" = "Batterie";
+"needsTransmitterId" = "ID du transmetteur manquant";
+"scan" = "Scan";
+"readyToScan" = "Prêt à scanner";
+"scanning" = "En cours de scan";
+"disconnect" = "Se déconnecter";
+"tryingToConnect" = "En cours de scan";
+"notTryingToConnect" = "Pas de scan en cours";
+"connect" = "Se connecter";
+"connectedAt" = "Connecté depuis";
+"disConnectedAt" = "Déconnecté depuis";
+"resetRequired" = "Réinitialisation requise";
+"lastReset" = "Dernière réinitialisation";
+"lastResetNotKnown" = "Dernière date de réinitialisation non connue";
+"transmitterResultResult" = "Ré-intialisation du Transmetteur";
+"bootLoader" = "Bootloader";
+"cannotActiveCGMInFollowerMode" = "Vous ne pouvez pas activer le capteur en mode Suiveur";
+"cgmDeActivateBecauseMovingToFollowerMode" = "Le capteur a été désactivé en raison d'un passage en mode Suiveur";
+"sensorType" = "Type de capteur";
+"confirmDisconnectTitle" = "Confirmer la déconnexion";
+"confirmDisconnectMessage" = "Sélectionner 'Déconnecter' pour confirmer que vous voulez vraiment déconnecter le transmetteur.";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Dexcom bluetooth screen. Is another app used in parallel or not
+"useOtherDexcomApp" = "Use With Other App";
+
+/// cell text, sensor start time
+"sensorStartDate" = "Sensor Started";
+
+/// cell text, transmitter start time
+"transmittterStartDate" = "Transmitter Started";
+
+"nfcScanFailedTitle" = "⚠️ Echec du scan capteur";
+
+"nfcScanFailedMessage" = "\nFaire un autre scan";
+
+"nfcScanFailedScanAgainButton" = "Faire un autre scan";
+
+"nfcScanSuccessfulTitle" = "✅ Scan du capteur réussi!";
+
+"nfcScanSuccessfulMessage" = "Cliquez OK et attendez que le capteur finisse de se connecter par bluetooth.\n\nDans peu de temps l'état devrait passer à 'Connecté'.";
+
+"nfcErrorMessageScanErrorRetrying" = "Erreur de scan capteur\n\nRéessai... # ";
+
+"nfcErrorMessageScanFailed" = "Le scan du capteur a échoué";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// text to inform the user that multi-point calibration is an advanced option and could be dangerous if used incorrectly
+"nonFixedSlopeWarning" = "Multi-point calibration is an advanced feature.\n\nPlease do not use this feature until you have read the calibration section of the online help and understand how it works.";
+
+/// text in status row, when waiting for a successful NFC scan before starting bluetooth scanning
+"nfcScanNeeded" = "NFC scan needed";
+
+/// sensor warm-up text
+"warmingUpUntil" = "Warming up until";
+
+"nativeAlgorithm" = "Algorithme natif";
+"xDripAlgorithm" = "Algorithme xDrip";
+"confirmAlgorithmChangeToTransmitterMessage" = "Confirmer le changement pour revenir à l'algorithme natif/transmetteur";
+"confirmAlgorithmChangeToxDripMessage" = "Confirmer le changement pour utiliser l'algorithme xDrip.\n\nLes lectures vont s'interrompre un moment et vous devrez insérer une valeur de calibration initiale.";
+"confirmCalibrationChangeToSinglePointMessage" = "Confirmer le changement du type de calibration à standard\n\nLes lectures vont s'interrompre un moment et vous devrez insérer une valeur de calibration initiale.";
+"confirmCalibrationChangeToMultiPointMessage" = "Confirmer le changement du type de calibration à multipoints\n\n⚠️ Notez que cette méthode est réservée aux utilisateurs expérimentés car elle peut générer des résultats dangereux en cas de calibration incorrecte.\n\nSi vous n'êtes pas sûr de savoir l'utiliser, sélectionnez Annuler.";

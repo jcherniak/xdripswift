@@ -1,0 +1,68 @@
+"address" = "Adres";
+"status" = "Durum";
+"connected" = "Bağlı";
+"notConnected" = "Bağlı değil";
+"donotconnect" = "Taramayı Durdur";
+"selectAliasText" = "Bu bluetooth cihazı için bir takma ad seçin, ad uygulamada gösterilecek ve tanımanız daha kolay olacaktır.";
+"aliasAlreadyExists" = "Bu takma ada sahip bir bluetooth aygıtı zaten var";
+"confirmDeletionPeripheral" = "Bluetooth aygıtınızı silmek istiyor musunuz: ";
+"bluetoothPeripheralAlias" = "Takma isim";
+"SensorSerialNumber" = "Seri numarası";
+"sensorType" = "Sensör tipi";
+"serialNumber" = "Seri numarası";
+"battery" = "Pil";
+"needsTransmitterId" = "Verici Kimliği Eksik";
+"scan" = "Tara";
+"readyToScan" = "Taramaya Hazır";
+"scanning" = "Tarıyor";
+"disconnect" = "Bağlantıyı kes";
+"tryingToConnect" = "Tarıyor";
+"notTryingToConnect" = "Taranmıyor";
+"connect" = "Bağla";
+"connectedAt" = "Bağlanma zamanı";
+"disConnectedAt" = "Bağlantı Kesildiği zaman";
+"resetRequired" = "Vericiyi sıfırla";
+"lastReset" = "Son Sıfırlama";
+"lastResetNotKnown" = "Son Sıfırlama Zaman Damgası bilinmiyor";
+"transmitterResultResult" = "Verici Sıfırlama Sonucu";
+"bootLoader" = "Bootloader";
+"cannotActiveCGMInFollowerMode" = "Takipçi Modunda bir CGM'yi etkinleştiremezsiniz";
+"confirmDisconnectTitle" = "Bağlantıyı Kesmeyi onaylayın";
+"confirmDisconnectMessage" = "Verici bağlantısını gerçekten kesmek istediğinizi onaylamak için 'Bağlantıyı Kes'i tıklayın.";
+"transmittterStartDate" = "Vericiyi Başlatın";
+"sensorStartDate" = "Sensörü Başlat";
+"useOtherDexcomApp" = "Dexcom-app uygulamasını takip et";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Sensor scan successful, title
+"nfcScanSuccessfulTitle" = "✅ Sensor Scan Successful!";
+
+/// text to inform the user that multi-point calibration is an advanced option and could be dangerous if used incorrectly
+"nonFixedSlopeWarning" = "Multi-point calibration is an advanced feature.\n\nPlease do not use this feature until you have read the calibration section of the online help and understand how it works.";
+
+/// Ask if the user wants to try and scan the sensor again
+"nfcScanFailedMessage" = "Please scan again";
+
+/// Sensor scan error, title
+"nfcScanFailedTitle" = "⚠️ Sensor Scan Failed";
+
+/// Tell the user the scan has failed and we're retrying several times
+"nfcErrorMessageScanFailed" = "Sensor scan has failed";
+
+/// text in status row, when waiting for a successful NFC scan before starting bluetooth scanning
+"nfcScanNeeded" = "NFC scan needed";
+
+/// Tell the user the scan has failed and we're retrying several times
+"nfcErrorMessageScanErrorRetrying" = "Sensor scan error\n\nRetrying... # ";
+
+/// sensor warm-up text
+"warmingUpUntil" = "Warming up until";
+
+/// Scan again button
+"nfcScanFailedScanAgainButton" = "Scan Again";
+
+/// Tell the user the scan was successful and to just wait now for connection
+"nfcScanSuccessfulMessage" = "Click OK and just wait to allow the Libre sensor to finish connecting via bluetooth.\n\nIn a short while the status should change to 'Connected'.";;

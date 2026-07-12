@@ -1,0 +1,87 @@
+"presnooze" = "Torkku";
+"sensor" = "Sensori";
+"calibrate" = "Kalibroi";
+"statusactiontitle" = "Status";
+"scanbluetoothdeviceactiontitle" = "Skannaa lähetin";
+"forgetbluetoothdeviceactiontitle" = "Unohda lähetin";
+"startsensor" = "Aloita sensori";
+"stopsensor" = "Lopeta sensori";
+"startsensortimeinfo" = "Seuraavissa valintaikkunoissa sinun on asetettava päiväys ja aika, jolloin anturi on asetettu. On tärkeää, että asetat päivämäärän ja ajan mahdollisimman oikein. Tämä on tärkeää tarkkuuden kannalta.";
+"scanbluetoothdeviceongoing" = "Skannataan lähetintä...";
+"bluetoothisnoton" = "Bluetooth ei ole päällä. Kytke ensin bluetooth päälle ja yritä uudelleen.";
+"bluetoothIsNotAuthorized" = "Bluetoothia ei ole sallittu %@:lle. Mene asetuksiin, etsi %@ sovellus ja salli Bluetooth.";
+"startScanningInfo" = "Scanning Started.\n\nKeep %@ open in the foreground until a connection is made.\n\n(There's no need to turn off Auto-Lock. Just don't press the home button and don't lock your iPhone)";
+"sensorstart" = "Sensori aloitus";
+"notstarted" = "Ei aloitettu";
+"notknown" = "Tuntematon";
+"lastconnection" = "Viimeinen yhteys";
+"transmitterbatterylevel" = "Lähettimen varaustaso";
+"ago" = "sitten";
+"licenseinfo" = "This program is free software distributed under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version.\r\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.\r\n\nSee http://www.gnu.org/licenses/gpl.txt for more details.\r\n\r\nInfo: ";
+"info" = "Info";
+"transmitterinfo" = "Siirry ensin bluetooth näyttöön, jossa voit lisätä ja skannata lähettimen.\r\n\nPalaa sitten koti näyttöön  ja aloita sensori.";
+"startsensorbeforecalibration" = "Et voi kalibroida, koska sensoria ei ole aloitettu.";
+"theresNoCGMTransmitterActive" = "Et voi kalibroida, koska lähetintä ole yhdistetty.";
+"theremustbeareadingbeforecalibration" = "Tarvitaan vähintään kaksi lukemaa ennen kalibrointia. Sinua pyydetään kalibroimaan heti, kun lukema saapuu.";
+"sensornotdetected" = "Sensoria ei havaittu. Tarkista, onko lähetin hyvin sijoitettu sensoriin.";
+"transmitternotpaired" = "Lähetintä ei ole muodostettu pariksi tämän iPhonen kanssa. Avaa sovellus.";
+"transmitterpairingtoolate" = "Liian myöhäistä, yhteys lähettimeen on nyt katkaistu. Sinun pitäisi saada uusi pariliitospyyntö muutamassa minuutissa.";
+"transmitterpairingsuccessful" = "Lähettimen paritus onnistui.";
+"transmitterpairingattempttimeout" = "Lähetin ei vastannut pariliitospyyntöön.";
+"success" = "Onnistui";
+"failed" = "Epäonnistui";
+
+/// Text in button on home screen
+"unlock" = "Avaa";
+
+/// Text in button on home screen
+"lock" = "Lukitse";
+
+/// Screen Lock Title
+"screenlocktitle" = "Näytön lukitus käytössä";
+
+/// Info message to explain screen lock function
+"screenlockinfo" = "Tämä pitää näytön hereillä, kunnes siirryt toiseen sovellukseen tai napsautat Avaa.\r\n\nOn suositeltavaa, että pidät puhelin kytkettynä laturiin, jotta akku ei tyhjene.";
+
+/// When user clicks stop sensor, ask confirmation
+"stopSensorConfirmation" = "Oletko varma, että haluat pysäyttää sensorin?";
+
+/// When user needs to enter sensor code, to start firefly sensor
+"enterSensorCode" = "jos sinulla ei ole koodia, käytä 0000, mutta muista, että et saa lukemia ennen kuin olet kalibroinut";
+
+/// status info : literally 'Sensor End'
+"sensorend" = "Sensori loppuu";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// if web oop enabled, and also if transmitter supports this, user clicks calibrate button, but calibration is not possible
+"calibrationNotNecessary" = "When using the native transmitter algorithm, manual calibration is not available.\n\nIf you want to calibrate, you can switch to the xDrip algorithm in the transmitter screen (if available).";
+
+/// nightscout is not enabled
+"nightscoutNotEnabled" = "Nightscout is disabled";
+
+/// After clicking scan button, this message will appear
+"hidingUrlForXSeconds" = "Hiding URL for %@s...";
+
+/// no sensor data is available
+"noSensorData" = "No sensor data";
+
+/// status info : literally 'Sensor Duration'
+"sensorDuration" = "Sensor Duration";
+
+/// nightscout is not enabled
+"nightscoutURLMissing" = "Nightscout URL missing";
+
+/// ask the user to disconnect and reconnect the sensor
+"reconnectLibreDataSource" = "Disconnect and reconnect Libre sensor";
+
+/// Error message in case Dexcom G5 (and G6?) battery is too low. This is deteced by wrong G5 values 2096896
+"dexcomBatteryTooLow" = "The Transmitter battery is too low!";
+
+/// username and/or password is missing for librelinkup
+"followerAccountCredentialsMissing" = "Username/password missing";
+
+/// no data source is enabled or connected
+"noDataSourceConnected" = "No CGM data source connected";

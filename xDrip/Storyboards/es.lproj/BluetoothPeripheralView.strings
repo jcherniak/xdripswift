@@ -1,0 +1,75 @@
+"address" = "Dirección";
+"status" = "Estado";
+"connected" = "Conectado";
+"notConnected" = "No Conectado";
+"donotconnect" = "Detener Escaneo";
+"selectAliasText" = "Escribir un nombre sencillo (alias) para poder reconocer este dispositivo bluetooth.";
+"aliasAlreadyExists" = "Ya existe otro dispositivo bluetooth con este nombre";
+"confirmDeletionPeripheral" = "Confirmar que quieres borrar el dispositivo bluetooth: ";
+"bluetoothPeripheralAlias" = "Alias";
+"SensorSerialNumber" = "Número de Serie";
+"serialNumber" = "Número de Serie";
+"battery" = "Batería";
+"needsTransmitterId" = "Falta la ID del Transmisor";
+"scan" = "Escanear";
+"readyToScan" = "Listo para Escanear";
+"scanning" = "Escaneando";
+"disconnect" = "Desconectar";
+"tryingToConnect" = "Escaneando";
+"notTryingToConnect" = "Escaneo Detenido";
+"connect" = "Conectar";
+"connectedAt" = "Conectado Desde";
+"disConnectedAt" = "Desconectado Desde";
+"resetRequired" = "Resetear Transmisor";
+"lastReset" = "Último Reset";
+"lastResetNotKnown" = "Fecha del Último Reset Desconocido";
+"transmitterResultResult" = "Resultado del reseteo del Transmisor";
+"bootLoader" = "Bootloader";
+"cannotActiveCGMInFollowerMode" = "No puedes añadir un transmisor MGC estando en modo Follower/Seguidor";
+"sensorType" = "Tipo de Sensor";
+"confirmDisconnectTitle" = "Confirmar Desconexión";
+"confirmDisconnectMessage" = "Haz click en 'Desconectar' para confirmar que deseas desconectar el transmisor.";
+"warmingUpUntil" = "Calentando hasta";
+"useOtherDexcomApp" = "Usar con otras apps";
+"sensorStartDate" = "Sensor iniciado";
+"transmittterStartDate" = "Transmisor iniciado";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Sensor scan successful, title
+"nfcScanSuccessfulTitle" = "✅ Sensor Scan Successful!";
+
+/// text to inform the user that multi-point calibration is an advanced option and could be dangerous if used incorrectly
+"nonFixedSlopeWarning" = "Multi-point calibration is an advanced feature.\n\nPlease do not use this feature until you have read the calibration section of the online help and understand how it works.";
+
+/// Ask if the user wants to try and scan the sensor again
+"nfcScanFailedMessage" = "Please scan again";
+
+/// Sensor scan error, title
+"nfcScanFailedTitle" = "⚠️ Sensor Scan Failed";
+
+/// Tell the user the scan has failed and we're retrying several times
+"nfcErrorMessageScanFailed" = "Sensor scan has failed";
+
+/// text in status row, when waiting for a successful NFC scan before starting bluetooth scanning
+"nfcScanNeeded" = "NFC scan needed";
+
+/// Tell the user the scan has failed and we're retrying several times
+"nfcErrorMessageScanErrorRetrying" = "Sensor scan error\n\nRetrying... # ";
+
+/// Scan again button
+"nfcScanFailedScanAgainButton" = "Scan Again";
+
+/// Tell the user the scan was successful and to just wait now for connection
+"nfcScanSuccessfulMessage" = "Click OK and just wait to allow the Libre sensor to finish connecting via bluetooth.\n\nIn a short while the status should change to 'Connected'.";;
+
+
+"nativeAlgorithm" = "Algoritmo nativo";
+"xDripAlgorithm" = "Algoritmo xDrip";
+"confirmAlgorithmChangeToTransmitterMessage" = "Por favor, confirmar que deseas cambiar al algoritmo nativo";
+"confirmAlgorithmChangeToxDripMessage" = "Por favor, confirmar que deseas cambiar al algoritmo de xDrip.\n\nEsto hará que dejes de recibir lecturas durante un breve tiempo y la app te pedirá introducir una calibración inicial en cuanto sea necesario.";
+"confirmCalibrationChangeToSinglePointMessage" = "Por favor, confirmar que deseas usar la calibración estándar.\n\nEsto hará que dejes de recibir lecturas durante un breve tiempo y la app te pedirá introducir una calibración inicial en cuanto sea necesario.";
+"confirmCalibrationChangeToMultiPointMessage" = "Por favor, confirmar que deseas usar la calibración multi-puntos.\n\n⚠️ Ten en cuenta que este método de calibración es únicamente para usuarios avanzados y podría ser incluso peligroso si no se hace correctamente.\n\nSi tienes claro cómo funciona esta opción, por favor, apreta Cancelar";
+"confirm" = "Confirmar";

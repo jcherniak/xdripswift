@@ -1,0 +1,138 @@
+
+/// cell text, if user needs to set the transmitter id
+"needsTransmitterId" = "Transmitter ID benötigt";
+
+/// BluetoothPeripheral view, this is a name of a BluetoothPeripheral assigned by the user, to recognize the device
+"bluetoothPeripheralAlias" = "Alias";
+
+/// text in status row, if ready to start scanning
+"readyToScan" = "Bereit zum scannen";
+
+/// text in button to start scanning
+"scan" = "Scannen";
+
+/// cell text, where user can select to reset a transmitter at next connect. Only for Dexcom
+"resetRequired" = "Transmitter zurücksetzen";
+
+/// text in status row, when not connected and app is not scanning
+"notTryingToConnect" = "Es wird nicht gescannt";
+
+/// when Bluetooth Peripheral is shown, title of the cell with the status
+"status" = "Status";
+
+/// text in status rown, when not connect but app is trying to connect
+"tryingToConnect" = "Suchen";
+
+/// BluetoothPeripheral view, text of the cell with the serial number (this is not the sensor serial number
+"serialNumber" = "Seriennummer";
+
+/// cell text, where the connection timestamp is shown
+"connectedAt" = "Verbunden am";
+
+/// text in button top right, this button will disable automatic connect
+"donotconnect" = "Scannen abbrechen";
+
+/// BluetoothPeripheral view, text of the cell with the sensor serial number
+"SensorSerialNumber" = "Sensor Seriennummer";
+
+/// cell text, shows when last reset was done, if known. Only for Dexcom
+"lastResetNotKnown" = "Zuletzt zurückgesetzt";
+
+/// button text, to disconnect
+"disconnect" = "Verbindung trennen";
+
+/// Bluetooth Peripheral view, when user clicks alias field
+"aliasAlreadyExists" = "Dieser Alias wird bereits von einer anderen Verbindung verwendet";
+
+/// button text, to connect
+"connect" = "Verbinden";
+
+/// row in bluetoothperipheral view, title
+"bootLoader" = "Bootloader";
+
+/// Bluetooth Peripheral view, when user clicks the trash button - this is not the complete sentence, it will be followed either by 'name' or 'alias', depending on the availability of an alias
+"confirmDeletionPeripheral" = "Möchten Sie das Gerät löschen";
+
+/// text in status row, if scanning ongoing
+"scanning" = "Am scannen";
+
+/// cell text, shows when last reset was done, if known. Only for Dexcom
+"lastReset" = "Zuletzt zurückgesetzt";
+
+/// To give result about transitter result in notification body
+"transmitterResultResult" = "Ergebnis für zurückgesetzten Transmitter";
+
+/// cell text, where the disconnection timestamp is shown
+"disConnectedAt" = "Nicht verbunden seit";
+
+/// BluetoothPeripheral view, text of the cell with the sensor type (only used for Libre)
+"sensorType" = "Sensor Typ";
+
+/// when Bluetooth Peripheral is shown, connection status, connected
+"connected" = "Verbunden";
+
+/// User tries to add a CGM or connect an already existing CGM, while in follower mode.
+"cannotActiveCGMInFollowerMode" = "CGM kann im Follower Mode nicht aktiviert werden";
+
+/// Bluetooth Peripheral view, when user clicks alias field
+"selectAliasText" = "Wählen Sie einen Alias, dieser wird in der App angezeigt und ist leichter zu sehen";
+
+/// 
+"notConnected" = "Nicht verbunden";
+
+/// 
+"battery" = "Batterie";
+
+/// when M5Stack is shown, title of the cell with the address
+"address" = "Adresse";
+
+"confirmDisconnectTitle" = "Verbindung trennen";
+"confirmDisconnectMessage" = "Klicke 'Verbindung trennen' um zu bestätigen, dass du die Verbindung zum Transmitter wirklich beenden möchtest.";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Dexcom bluetooth screen. Is another app used in parallel or not
+"useOtherDexcomApp" = "Use With Other App";
+
+/// cell text, sensor start time
+"sensorStartDate" = "Sensor Started";
+
+/// cell text, transmitter start time
+"transmittterStartDate" = "Transmitter Started";
+
+"nfcScanFailedTitle" = "⚠️ Scan gescheitert";
+
+"nfcScanFailedMessage" = "\nBitte erneut Scannen";
+
+"nfcScanFailedScanAgainButton" = "Erneut Scannen";
+
+"nfcScanSuccessfulTitle" = "✅ Sensor Scan erfolgreich!";
+
+"nfcScanSuccessfulMessage" = "Drücken Sie OK und warten Sie bis der Sensor die Verbindung über Bluetooth hergestellt hat.\n\nIn Kürze wird der Status zu 'Verbunden' wechseln.";
+
+"nfcErrorMessageScanErrorRetrying" = "Sensor Scan Fehler\n\nWiederhole!... # ";
+
+"nfcErrorMessageScanFailed" = "Sensor Scan gescheitert";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// text to inform the user that multi-point calibration is an advanced option and could be dangerous if used incorrectly
+"nonFixedSlopeWarning" = "Multi-point calibration is an advanced feature.\n\nPlease do not use this feature until you have read the calibration section of the online help and understand how it works.";
+
+/// text in status row, when waiting for a successful NFC scan before starting bluetooth scanning
+"nfcScanNeeded" = "NFC scan needed";
+
+/// sensor warm-up text
+"warmingUpUntil" = "Warming up until";
+
+"nativeAlgorithm" = "Nativer Algorithmus";
+"xDripAlgorithm" = "xDrip Algorithmus";
+"confirmAlgorithmChangeToTransmitterMessage" = "Bitte um Bestätigung, dass zum  nativen/transmitter Algorithmus gewechselt werden soll";
+"confirmAlgorithmChangeToxDripMessage" = "itte um Bestätigung, dass zum xDrip Algorithmus gewechselt werden soll.\n\nDies stoppt für kurze Zeit die Datenübermittlung und Du wirst um einen initialen Kalibrierungswert (Blut) gebeten.";
+"confirmCalibrationChangeToSinglePointMessage" = "Bitte um Bestätigung, dass zur Standard Kalibrierung gewechselt werden soll.\n\nDies stoppt für kurze Zeit die Datenübermittlung und Du wirst um einen initialen Kalibrierungswert (Blut) gebeten.";
+"confirmCalibrationChangeToMultiPointMessage" = "Bitte um Bestätigung, dass zur Mehrpunkt Kalibrierung gewechselt werden soll.\n\n⚠️ Diese Methode ist nur  für erfahrene Benutzer, es könnte ein falscher und damit gefährlicher Wert angezeigt werden, wenn die Kalibrierung nicht korrekt durchgeführt wurde.\n\nWenn Du unsicher bist, bitte drücke Abbruch/Cancel.";
+"confirm" = "Bestätigen";

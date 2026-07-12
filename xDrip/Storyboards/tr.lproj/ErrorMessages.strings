@@ -1,0 +1,3 @@
+"error_message_Dexcom_transmitter_id_invalid_characters" = "Verici Kimliği yalnızca a-z, A-Z veya 0-9 karakterlerini içermelidir";
+"error_message_transmitter_id_should_have_length_6" = "Verici Kimliği 6 karakter uzunluğunda olmalıdır";
+"error_message_transmitter_id_should_have_length_5" = "Verici Kimliği 5 karakter uzunluğunda olmalıdır";

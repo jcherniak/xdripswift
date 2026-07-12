@@ -1,0 +1,486 @@
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// used in settings, section Info, title of the license setting
+"settingsviews_license" = "License";
+
+/// help settings, should the online help be translated automatically if needed
+"settingsviews_translateOnlineHelp" = "Translate Automatically";
+
+/// dexcom share settings, where user can set the dexcom share account name
+"settingsviews_dexcomShareAccountName" = "Account Name";
+
+/// 
+"settingsviews_showcoloredobjectives" = "Show Colored Lines";
+
+/// transmitter settings, just the words that explain that the settings is about transmitter type
+"settingsviews_transmittertype" = "Transmitter Type";
+
+/// home screen settings, high value
+"settingsviews_highValue" = "High Value";
+
+/// Calendar Events Settings - text in row where create event is enabled or disabled 
+"createCalendarEvent" = "Create Calendar Events";
+
+/// general settings, when switching from master to follower, if confirmation is asked, this message will be shown.
+"warningChangeFromMasterToFollower" = "Switching from Master to Follower will stop your current sensor. Do you want to continue?";
+
+/// name of setting for back ground color
+"m5stack_settingsviews_backGroundColor" = "Background Color";
+
+/// M5 stack setting, brightness
+"m5stack_settingsviews_brightness" = "Screen Brightness";
+
+/// Calendar Events Settings - text in row where user needs to say if unit should be displayed or not
+"displayUnitInCalendarEvent" = "Display Unit";
+
+/// name of setting for text color
+"m5stack_settingsviews_textColor" = "Text Color";
+
+/// transmitter settings, pop up that asks user to inter transmitter id
+"settingsviews_givetransmitterid" = "Enter Transmitter ID";
+
+/// nightscout settings, where user can set the nightscout url
+"settingsviews_nightscoutUrl" = "URL";
+
+/// general settings, should reading be multiplied with 10 yes or no
+"settingsviews_multipleAppBadgeValueWith10" = "Multiply App Badge Reading by 10";
+
+/// in Settings, section title for Trace
+"sectionTitleTrace" = "Issue Reporting";
+
+/// dexcom share settings, pop up that asks user to enter dexcom share password
+"settingsviews_giveDexcomSharePassword" = "Give Dexcom Share Password";
+
+/// speak settings, where user can enable or disable speak readings
+"settingsviews_speakBgReadings" = "Speak BG Readings";
+
+/// general settings, literally master
+"settingsviews_master" = "Master";
+
+/// speak settings, where user can enable or disable speak delta
+"settingsviews_speakDelta" = "Speak Delta";
+
+/// nightscout settings, port to use
+"nightscoutPort" = "Port";
+
+/// healthkit settings, section title
+"settingsviews_sectiontitlehealthkit" = "Apple Health";
+
+/// nightscout settings, title of row
+"uploadSensorStartTime" = "Upload Sensor Start Time";
+
+/// default text in email body, when user wants to send trace file.
+"emailbodyText" = "Problem Description: ";
+
+/// speak reading settings, text in pop up where user can select the language
+"settingsviews_speakreadingslanguageselection" = "Select Language";
+
+/// In Settings, Alerts section, there's an option to test the volume of ios sound, this is the title of the row
+"volumeTestiOSSound" = "Test Volume (Current iPhone Volume)";
+
+/// home screen settings, section title
+"settingsviews_sectiontitlehomescreen" = "Home Screen";
+
+/// If user has earlier denied access to calendar, and then tries to activate creation of events in calendar, this message will be shown
+"infoCalendarAccessDeniedByUser" = "You previously denied access to your Calendar.\n\nTo enable it go to your device settings, privacy, calendars and enable it.";
+
+/// When clicking the retention setting, a pop up asks for how many days should data be stored
+"settingsviews_housekeeperRetentionPeriodMessage" = "For how many days should data be stored? (Min 90, Max 365)\n\n(Recommended: 90 days)";
+
+/// Housekeeper settings, section title
+"settingsviews_sectionTitleHousekeeper" = "Data Management";
+
+/// non fixed settings, title of the section
+"settingsviews_labelNonFixed" = "Multi-point Calibration";
+
+/// Button to export all data
+"settingsviews_housekeeperExportAllData" = "Export All Data";
+
+/// nightscout settings, where user can enable or disable nightscout
+"settingsviews_nightscoutEnabled" = "Enable Nightscout";
+
+/// home screen settings, urgent high value
+"settingsviews_urgentHighValue" = "Urgent High Value";
+
+/// statistics settings, use IFCC method for HbA1c?
+"settingsviews_useIFCCA1C" = "Show HbA1c in mmols/mol";
+
+/// dexcom share settings settings, where user can set dexcom serial number to be used for dexcom share upload
+"settingsviews_dexcomShareUploadSerialNumber" = "Receiver Serial Number";
+
+/// for text in pop up where user can select bg unit
+"settingsviews_selectbgunit" = "Blood Glucose Units";
+
+/// statistics settings, section title
+"settingsviews_sectiontitlestatistics" = "Statistics";
+
+/// dexcom share settings, where user can choose to use US url or not
+"settingsviews_useUSDexcomShareurl" = "Use Dexcom US Servers";
+
+/// healthkit settings, literally 'healthkit'
+"settingsviews_healthkit" = "Write Data to Apple Health";
+
+/// In Settings, Alerts section, there's an option to test the volume settings, this is text explaining the test when clicking the row - this is for ios sound volume test
+"volumeTestiOSSoundExplanation" = "An alarm sound is now being played with the same volume that will be used for an Alarm Type with 'Override Mute' = Off\n\n(Also used always for Missed Reading alarms which use the iOS volume.)\n\nPress one of the volume buttons to stop the sound, then change the volume with the volume buttons to the desired volume and test again.";
+
+/// statistics settings, show statistics on home screen
+"settingsviews_showStatistics" = "Show Statistics";
+
+/// alerting settings, row alert types
+"settingsviews_row_alert_types" = "Alarm Types";
+
+/// in Settings, row title to send settings
+"sendTraceFile" = "Send Issue Report";
+
+/// M5 stack bluetooth  settings, pop up that asks user to enter the password
+"m5stack_settingsviews_giveBluetoothPassword" = "Enter Bluetooth Password";
+
+/// nightscout settings, where user can select to use schedule or not
+"settingsviews_useSchedule" = "Use Upload Schedule";
+
+/// speak settings, where user can select the language
+"settingsviews_speakBgReadingslanguage" = "Language";
+
+/// nightscout settings, where user can set the nightscout api key
+"settingsviews_nightscoutAPIKey" = "API_SECRET";
+
+/// transmitter settings, to explain that settings is about resetting the transmitter
+
+/// home screen settings, should the main glucose chart screen be allowed?
+"settingsviews_allowScreenRotation" = "Allow Chart Rotation";
+
+/// Calendar Events Settings - section title
+"calendarEventsSectionTitle" = "Calendar Events";
+
+/// When clicking the interval setting, a pop up asks for minimum number of minutes between two readings, this is the pop up message - this is used for setting the interval between two readings in BG notifications, Speak readings, Apple Watch
+"settingsviews_IntervalTitle" = "Notification Interval";
+
+/// If user is not allowed to give any app access to the Calendar, due to restrictions. And then tries to activate creation of events in calendar, this message will be shown
+"infoCalendarAccessRestricted" = "You cannot give authorization to %@ to access your calendar. This is possibly due to active restrictions such as parental controls being in place.";
+
+/// transmitter settings, just the words that explain that the settings is about transmitter id
+"settingsviews_transmitterid" = "Transmitter ID";
+
+/// home screen settings, urgent low value
+"settingsviews_urgentLowValue" = "Urgent Low Value";
+
+/// general settings, should reading be shown in app badge yes or no
+"settingsviews_labelShowReadingInAppBadge" = "Show BG in the App Badge";
+
+/// In Settings, Alerts section, there's an option to test the volume settings, this is text explaining the test when clicking the row - this is for sound player volume test
+"volumeTestSoundPlayerExplanation" = "An alarm sound is now being played with the same volume that will be used for an Alarm Type with 'Override Mute' = On\n\n(Used for all alarms except Missed Reading alerts which always use the iOS volume.)\n\nChange the volume with the volume buttons and press OK when done.";
+
+/// alerting settings, section title
+"settingsviews_sectiontitlealerting" = "Alarms";
+
+/// deloper settings, row title for OSLog - with OSLog enabled, a developer can view log information as explained here https://developer.apple.com/documentation/os/oslog
+"oslog" = "OSLog";
+
+/// transmitter settings, section title
+"settingsviews_sectiontitletransmitter" = "Transmitter";
+
+/// used for editing schedule for Nightscout upload and Dexcom Share upload
+"editScheduleTimePickerSubtitle" = "Change: ";
+
+/// In Settings, Alerts section, there's an option to test the volume of the sound player, this is the title of the row
+"volumeTestSoundPlayer" = "Test Volume (if Override Mute On)";
+
+/// speak settings, where enable or disable speak trend
+"settingsviews_speakTrend" = "Speak Trend";
+
+/// dexcom share settings, pop up that asks user to enter dexcom share serial number
+"settingsviews_givedexcomShareUploadSerialNumber" = "Enter the Dexcom Receiver Serial Number";
+
+/// Housekeeper retention period, for how long to store data
+"settingsviews_housekeeperRetentionPeriod" = "Retention Period (days)";
+
+/// When clicking the interval setting, a pop up asks for minimum number of minutes between two readings, this is the pop up message - this is used for setting the interval between two readings in BG notifications, Speak readings, Apple Watch
+"settingsviews_IntervalMessage" = "Minimum interval between two notifications, in minutes";
+
+/// home screen settings, should the clock also be displayed when the screen is locked?
+"settingsviews_showClockWhenScreenIsLocked" = "Show Clock when Locked";
+
+/// dexcom share settings, section title
+"settingsviews_sectiontitledexcomshareupload" = "Dexcom Share Upload";
+
+/// user tries to send trace file but there's no native email account configured
+"emailNotConfigured" = "You must configure an e-mail account on your iOS device.";
+
+/// statistics settings, how many days to use for calculations
+"settingsviews_daysToUseStatisticsMessage" = "Maximum days we should try to use to calculate the statistics?\n\n(Enter 0 to calculate today since midnight)";
+
+/// general settings, literally follower
+"settingsviews_follower" = "Follower";
+
+/// nightscout settings, pop up that asks user to enter nightscout api key
+"settingsviews_giveNightscoutAPIKey" = "Enter your API_SECRET";
+
+/// Calendar Events Settings - text in row where user needs to select a calendar
+"calenderId" = "Calendar To Use";
+
+/// treatments settings, section title
+"settingsviews_sectiontitletreatments" = "Treatments";
+
+/// nightscout settings, when clicking the cell, test the url and api key
+"testUrlAndAPIKey" = "Test Connection";
+
+/// in Settings, to enable debug level in trace file
+"debugLevel" = "Include Debug Level";
+
+/// help settings, restart needed
+"settingsviews_restartNeeded" = "(Restart required)";
+
+/// nightscout settings, section title
+"settingsviews_sectiontitlenightscout" = "Nightscout";
+
+/// used in settings, section Info, title of the build setting
+"settingsviews_build" = "Build";
+
+/// used in settings, section Info, title of the version setting
+"settingsviews_Version" = "Version";
+
+/// treatments settings, show the treatments on main chart
+"settingsviews_showTreatments" = "Show Treatments";
+
+/// shown on top of the first settings screen, literally 'Settings'
+"settingsviews_settingstitle" = "Settings";
+
+/// Developer Settings, section title
+"developerSettings" = "Developer Settings";
+
+/// non fixed calibration slopes settings in bluetooth peripheral view : enabled or not
+"settingsviews_nonfixedtransmitter" = "Enable Multi-point Calibration";
+
+/// bluetooth settings, section title - also used in bluetooth peripheral view, eg when viewing M5Stack details. This is the title of the first section
+"m5stack_settingsviews_sectiontitlebluetooth" = "Bluetooth";
+
+/// alerting settings, row alerts
+"settingsviews_row_alerts" = "Alarms";
+
+/// transmitter settings, this is for the button, when clicked then user will be requested to give transmitter id. The only difference with settingsviews_transmitterid is that ':' is not added
+"settingsviews_transmitterid_text_for_button" = "Transmitter ID";
+
+/// dexcom share settings, where user can select if readings should be uploaded to dexcom share yes or no
+"settingsviews_uploadReadingstoDexcomShare" = "Upload to Dexcom Share";
+
+/// nightscout or dexcom share settings, where user can select to edit the schedule
+"schedule" = "Schedule";
+
+/// general settings, should reading be shown in notification yes or no
+"settingsviews_showReadingInNotification" = "Show BG in Notifications";
+
+/// web oop settings in bluetooth peripheral view : enabled or not
+"settingsviews_webooptransmitter" = "Use Transmitter Algorithm";
+
+/// home screen settings, show target line
+"settingsviews_showtarget" = "Show Target Line";
+
+/// nightscout  settings, pop up that asks user to enter nightscout url
+"settingsviews_giveNightscoutUrl" = "Enter your Nightscout URL";
+
+/// Calendar Events Settings - text in row where user needs to say if delta should be displayed or not
+"displayDeltaInCalendarEvent" = "Display Delta";
+
+/// weboop settings, title of the dialogs where user can select between xdrip or transmitter algorithm
+"settingsviews_labelWebOOP" = "xDrip or Transmitter Algorithm";
+
+/// about settings, section title
+"settingsviews_sectiontitleAbout" = "About %@";
+
+/// Text in pop up shown when user wants to send the trace file
+"describeProblem" = "Explain why you need to send the trace file with as much detail as possible. If you have already reported your problem in the Facebook support group '%@', then mention your facebook name in the e-mail";
+
+/// help settings, open the online help
+"settingsviews_showOnlineHelp" = "Open Online Help";
+
+/// home screen settings, low value
+"settingsviews_lowValue" = "Low Value";
+
+/// deloper settings, row title for 'Smooth Libre Values?'
+"smoothLibreValues" = "Smooth Libre Values";
+
+/// shown on top of the first settings screen
+"m5stack_settingsviews_settingstitle" = "M5 Stack Settings";
+
+/// statistics settings, how many days to use for calculations
+"settingsviews_daysToUseStatisticsTitle" = "Days to Calculate";
+
+/// Calendar Events Settings - text in row where user needs to say if trend should be displayed or not
+"settingsviews_displayTrendInCalendarEvent" = "Display Trend";
+
+/// In case user tries to send trace file via email but error occurs.
+"failedToSendEmail" = "Failed to Send Email";
+
+/// speak settings, section title
+"settingsviews_sectiontitlespeak" = "Voice";
+
+/// Apple Watch Settings - section title
+"appleWatchSectionTitle" = "Apple Watch";
+
+/// general settings, section title
+"settingsviews_sectiontitleNotifications" = "Notifications";
+
+/// dexcom share settings, pop up that asks user to enter dexcom share account name
+"settingsviews_giveDexcomShareAccountName" = "Enter Dexcom Share Account Name";
+
+/// When creating schedule for Nightscout or Dexcom Share upload, this is the top label text
+"timeScheduleViewTitle" = "On/Off Time Schedule for ";
+
+/// When clicking the threshold setting, a pop up asks for the number of units under which a bolus should be considered a micro-bolus
+"settingsviews_smallBolusTreatmentThresholdMessage" = "Below how many units should we consider a bolus as a micro-bolus?\n\n(Recommended value: 1.0U)";
+
+/// general settings, master or follower
+"settingsviews_masterorfollower" = "Master or Follower";
+
+/// deloper settings, row title for NSLog - with NSLog enabled, a developer can view log information as explained here https://github.com/JohanDegraeve/xdripswift/wiki/NSLog
+"nslog" = "NSLog";
+
+/// home screen settings, target value
+"settingsviews_targetValue" = "Target Value";
+
+/// help settings, section title
+"settingsviews_sectiontitlehelp" = "Help & Documentation";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Settings screen for loop delay
+"Select Time" = "Select Time";
+
+/// transmitter settings, to explain that the reset option only works for certain transmitters
+"settingsviews_resetDexcomTransmitterMessage" = "\nThis option will attempt to reset the transmitter on the next connection.\n\nNote that this will only work for G5 transmitters, very early G6 and all Anubis G6 transmitters.\n\nIt will NOT work for normal G6 or ONE transmitters.";
+
+/// data source settings, keep-alive mode is set to aggressive
+"settingsviews_followerKeepAliveTypeAggressiveMessage" = "Background keep-alive is set to aggressive.\n\nWhen the app is not on screen, we will aggressively attempt to keep it running for you in the background so that BG updates are received and alarms can be triggered.\n\nThis mode has a very noticeable impact on the battery of your device and should only be used if absolutely necessary.";
+
+/// libre link up follower settings, no active sensor
+"settingsviews_libreLinkUpNoActiveSensor" = "No active sensor data";
+
+/// data source settings, keep-alive mode is set to disabled
+"settingsviews_followerKeepAliveTypeDisabledMessage" = "Background keep-alive is disabled.\n\nWhen the app is not on screen, no alarms, app badges, notifications or BG updates will take place.\n\nThe app will remain sleeping until you open it again.\n\nThis mode has very little impact on the battery of your device.";
+
+/// Settings screen for loop delay, explanatory text for value
+"expanatoryTextSelectValue" = "Delay in minutes, applied to readings shared with OS-AID";
+
+/// statistics settings, prefer time in tight range
+"settingsviews_timeInRangeTypeTightRange" = "Tight Range";
+
+/// data source settings, keep-alive mode is set to normal
+"settingsviews_followerKeepAliveTypeNormal" = "Normal";
+
+/// data source settings, keep-alive mode is set to aggressive
+"settingsviews_followerKeepAliveTypeAggressive" = "Aggressive";
+
+/// statistics settings, prefer standard time in range
+"settingsviews_timeInRangeTypeStandardRange" = "Standard Range";
+
+/// statistics settings, the type of time in range selected
+"settingsviews_labelTimeInRangeType" = "Time In Range Type";
+
+/// data source settings, enable background keep alive
+"settingsviews_labelfollowerKeepAliveType" = "Background Keep-alive";
+
+/// this setting is required
+"settingsviews_valueIsRequired" = "⚠️ Required";
+
+/// treatments settings, offset the carb treatments on main chart
+
+/// When clicking the interval setting, a pop up asks for minimum number of minutes between two calendar events, this is the pop up message - this is used for setting the interval between two calendar events, Speak readings, Apple Watch
+"settingsviews_CalenderIntervalMessage" = "Minimum interval between two calender events (mins)";
+
+/// When user creates new loopdelay, with a timestamp that already exists - this is the warning text
+"warningLoopDelayAlreadyExists" = "There is already a loopDelay for this time.";
+
+/// statistics settings, prefer user-defined range
+"settingsviews_timeInRangeTypeUserDefinedRange" = "User Range";
+
+/// CGM data source settings, section title
+"settingsviews_sectionTitleDataSource" = "CGM Data Source";
+
+/// follower settings, pop up that asks user to enter their username
+"settingsviews_enterUsername" = "Enter your username";
+
+/// data source settings, show that Nightscout is disabled
+"settingsviews_nightscoutNotEnabledRowText" = "Disabled";
+
+/// data source settings, keep-alive mode is set to use an external heartbeat
+"settingsviews_followerKeepAliveTypeHeartbeatMessage" = "Background keep-alive is set to use an external heartbeat. ❤️\n\nWhen the app is not on screen, the external heartbeat will wake it up in the background so that BG updates are received and alarms can be triggered.\n\nMake sure you add a valid heartbeat device in the Bluetooth screen.\n\nThis mode has very little impact on the battery of your device but will only work if a valid heartbeat is running.";
+
+/// When enabled, readings will not be reading to shared user defaults (for loop)
+"suppressLoopShare" = "Suppress Loop Share";
+
+/// When clicking the event interval setting, a pop up asks for minimum number of minutes between two events, this is the pop up message - this is used for setting the interval between two calendar events
+"settingsviews_CalenderIntervalTitle" = "Event Interval";
+
+/// data source settings, enable Nightscout in the Nightscout section
+"settingsviews_nightscoutNotEnabled" = "Nightscout is disabled\n\nTo upload BG values to Nightscout, you must enable it in the Nightscout section.";
+
+/// screen dimming is disabled
+"settingsviews_screenLockDimmingTypeDisabled" = "Disabled";
+
+/// When clicking the speak interval setting, a pop up asks for minimum number of minutes between two speech events, this is the pop up message - this is used for setting the interval between two spoken bg announcements
+"settingsviews_SpeakIntervalTitle" = "Speak Interval";
+
+/// libre link up follower settings, pop up that asks user to enter their region
+"settingsviews_libreLinkUpReAcceptNeeded" = "Need to accept terms";
+
+/// When clicking the interval setting, a pop up asks for minimum number of minutes between two bg announcements, this is the pop up message - this is used for setting the interval between two readings in BG announcements, Speak readings, Apple Watch
+"settingsviews_SpeakIntervalMessage" = "Minimum interval between two voice announcements (mins)";
+
+/// home screen settings, should the mini-chart be shown
+"settingsviews_showMiniChart" = "Show Mini-Chart";
+
+/// data source settings, the name of the person we are following
+"settingsviews_followerPatientName" = "Patient Name";
+
+/// data source settings, keep-alive mode is set to disabled
+"settingsviews_followerKeepAliveTypeDisabled" = "Disabled";
+
+/// screen dimming is dark
+"settingsviews_screenLockDimmingTypeDark" = "Dark";
+
+/// screen dimming is dimmed
+"settingsviews_screenLockDimmingTypeDimmed" = "Dimmed";
+
+/// When enabled, then it should be possible to run xDrip4iOS/Libre 2 in parallel with other app(s)
+"suppressUnLockPayLoad" = "Suppress Unlock Payload";
+
+/// Settings screen for loop delay
+"Select Value" = "Select Value";
+
+/// Settings screen for loop delay, explanatory text for time
+"expanatoryTextSelectTime" = "As of what time should the value apply";
+
+/// data source settings, data source region
+"settingsviews_labelFollowerDataSourceRegion" = "Region";
+
+/// data source settings, data source
+"settingsviews_labelFollowerDataSourceType" = "Data Source";
+
+/// data source settings, enable Nightscout upload
+"settingsviews_labelUploadDataToNightscout" = "Upload to Nightscout";
+
+/// data source settings, ask the user to enter the name of the person we are following if they want to - it's optional
+"settingsviews_followerPatientNameMessage" = "Here you can optionally write the name of the person you are following.";
+
+/// follower settings, pop up that asks user to enter their password
+"settingsviews_enterPassword" = "Enter your password";
+
+/// The user needs to update their calendar permissions
+"infoCalendarAccessWriteOnly" = "You cannot use Calendar Events until you update the calendar access permission from 'Add Events Only' to 'Full Access'.\n\nGo to iPhone Settings > Apps > %@ > Calendars and select 'Full Access'.";
+
+/// data source settings, keep-alive mode is set to normal
+"settingsviews_followerKeepAliveTypeNormalMessage" = "Background keep-alive is set to normal operation.\n\nWhen the app is not on screen, we will attempt to keep it running for you in the background so that BG updates are received and alarms can be triggered.\n\nThis mode has a noticeable impact on the battery of your device.";
+
+/// home screen settings, should the screen be dimmed when the screen is locked
+"settingsviews_screenLockDimmingTypeWhenScreenIsLocked" = "Dim Screen when Locked";
+
+/// Should loop data be shared only every 5 minutes
+"shareToLoopOnceEvery5Minutes" = "Share with OS-AID every 5 mins";
+
+/// screen dimming is very dark
+"settingsviews_screenLockDimmingTypeVeryDark" = "Very Dark";

@@ -1,0 +1,76 @@
+"address" = "Adres";
+"status" = "Status";
+"connected" = "Verbonden";
+"notConnected" = "Niet Verbonden";
+"donotconnect" = "Stop Scannen";
+"selectAliasText" = "Kies een alias voor dit bluetooth apparaat, de naam wordt getoond in de app en is gemakkelijker te herkennen";
+"aliasAlreadyExists" = "Er is al een bluetooth apparaat met deze alias";
+"confirmDeletionPeripheral" = "Wil je bluetooth apparaat verwijderen: ";
+"bluetoothPeripheralAlias" = "Alias";
+"SensorSerialNumber" = "Sensor Serie Nummer";
+"sensorType" = "Sensor Type";
+"serialNumber" = "Serie Nummer";
+"battery" = "Batterij";
+"needsTransmitterId" = "Transmitter ID mist";
+"scan" = "Scan";
+"readyToScan" = "Klaar om te Scannen";
+"scanning" = "Scannen...";
+"disconnect" = "Loskoppelen";
+"tryingToConnect" = "Scannen...";
+"notTryingToConnect" = "Niet aan het scannen";
+"connect" = "Verbind";
+"connectedAt" = "Verbonden op";
+"disConnectedAt" = "Losgekoppeld Op";
+"resetRequired" = "Transmitter resetten";
+"lastReset" = "Laatste Reset";
+"lastResetNotKnown" = "Laatste Reset Tijdstip onbekend";
+"transmitterResultResult" = "Transmitter Reset Resultaat";
+"cannotActiveCGMInFollowerMode" = "Je kunt een CGM in Volg Modus niet activeren";
+/// # Remark
+/// The English word Bootloader does not have a sufficient Dutch translation.
+/// [Wikipedia (Bootloader)](https://nl.wikipedia.org/wiki/Bootloader)
+"bootLoader" = "Bootloader";
+"confirmDisconnectTitle" = "Bevestig Loskoppelen";
+"confirmDisconnectMessage" = "Klik 'Loskoppelen' om te bevestigen dat je de zender wil loskoppelen.";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Dexcom bluetooth screen. Is another app used in parallel or not
+"useOtherDexcomApp" = "Use With Other App";
+
+/// cell text, sensor start time
+"sensorStartDate" = "Sensor Started";
+
+/// cell text, transmitter start time
+"transmittterStartDate" = "Transmitter Started";
+
+
+"nfcScanFailedTitle" = "⚠️ Sensor Scan mislukt";
+"nfcScanFailedMessage" = "\nScan opnieuw";
+"nfcScanFailedScanAgainButton" = "Scan Opnieuw";
+"nfcScanSuccessfulTitle" = "✅ Sensor Scan gelukt!";
+"nfcScanSuccessfulMessage" = "Klik 'Ok' en wacht tot de sensor connectie heeft gemaakt met de app.\n\nBinnen enkele ogenblikken moet de status veranderen naar 'Verbonden'.";
+"nfcErrorMessageScanErrorRetrying" = "Sensor scan fout\n\nBezig met opnieuw proberen... # ";
+"nfcErrorMessageScanFailed" = "Sensor scan mislukt";
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////   Translation needed - remove this header after translation                       /////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+/// text to inform the user that multi-point calibration is an advanced option and could be dangerous if used incorrectly
+"nonFixedSlopeWarning" = "Multi-point calibration is an advanced feature.\n\nPlease do not use this feature until you have read the calibration section of the online help and understand how it works.";
+
+/// text in status row, when waiting for a successful NFC scan before starting bluetooth scanning
+"nfcScanNeeded" = "NFC scan needed";
+
+/// sensor warm-up text
+"warmingUpUntil" = "Warming up until";
+
+"nativeAlgorithm" = "Native algoritme";
+"xDripAlgorithm" = "xDrip algoritme";
+"confirmAlgorithmChangeToTransmitterMessage" = "Je wil dus terug naar het native algoritme?";
+"confirmAlgorithmChangeToxDripMessage" = "Je wil dus naar het xDrip algoritme?\n\nJe zult na de aanpassing gedurende korte tijd geen metingen krijgen en er zal je gevraagd worden om te kalibreren.";
+"confirmCalibrationChangeToSinglePointMessage" = "Je wil dus het kalibratie type veranderen naar standaard kalibratie?\n\nJe zult na de aanpassing gedurende korte tijd geen metingen krijgen en er zal je gevraagd worden om te kalibreren.";
+"confirmCalibrationChangeToMultiPointMessage" = "Je wil dus het kalibratie type veranderen naar meerpunts kalibratie?\n\n⚠️ Dit kalibratietype is voor ervaren gebruikers en kan bij foute kalibratie gevaarlijke resultaten geven.\n\nAls je niet zeker bent dat je deze methode goed kunt gebruiken, kies dan Annuleer.";
