@@ -36,8 +36,23 @@ enum ConstantsDexcomShare {
     /// minimum time in seconds between two attempts to fetch events from Dexcom Share
     static let dexcomShareEventsFetchIntervalInSeconds = 300.0
 
+    /// after this many consecutive events fetch failures, the fetch interval is increased to dexcomShareEventsFetchBackoffIntervalInSeconds
+    static let dexcomShareEventsFetchMaxFailuresBeforeBackoff = 5
+
+    /// events fetch interval in seconds used once dexcomShareEventsFetchMaxFailuresBeforeBackoff consecutive failures are reached - avoids hammering Dexcom forever with requests it keeps rejecting
+    static let dexcomShareEventsFetchBackoffIntervalInSeconds = 6.0 * 3600.0
+
+    /// timeout in seconds for the events fetch request - keeps a hanging events request from tying up resources (the glucose download runs in a separate task)
+    static let dexcomShareEventsFetchTimeoutInSeconds = 15.0
+
     /// how far back (in hours) to request events from Dexcom Share
     static let dexcomShareEventsFetchWindowInHours = 24.0
+
+    /// insulin treatments imported from Dexcom Share get this enteredBy value - also used to identify them when writing to Apple Health
+    static let dexcomShareEnteredBy = "Dexcom Share"
+
+    /// when importing an insulin event from Dexcom Share, if an insulin treatment already exists within this window (in seconds) around the event timestamp with the same amount, the event is considered already imported - kept small so two genuine identical doses a few minutes apart are both kept
+    static let insulinImportDedupeWindowInSeconds = 5.0
     
     /// dummy/failed session ID - used in both upload and follower classes
     static let failedSessionId = "00000000-0000-0000-0000-000000000000"

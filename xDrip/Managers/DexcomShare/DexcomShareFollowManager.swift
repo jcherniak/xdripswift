@@ -240,8 +240,10 @@ class DexcomShareFollowManager: NSObject {
                 trace("    in download, error = %{public}@", log: self.log, category: ConstantsLog.categoryDexcomShareFollowManager, type: .error, error.localizedDescription)
             }
 
-            // if enabled, also try to import insulin events logged in the Dexcom app - failures are handled (and throttled) inside the function and never disturb the glucose download
-            await self.downloadAndProcessInsulinEvents()
+            // if enabled, also try to import insulin events logged in the Dexcom app - runs as a separate task so a slow events request can never delay rescheduling of the glucose download; failures are handled (and throttled) inside the function
+            Task { [weak self] in
+                await self?.downloadAndProcessInsulinEvents()
+            }
 
             // rescheduling the timer must be done on the main actor
             // we do it here at the end of the function so that it is always rescheduled once a valid connection is established, irrespective of whether we get values.
@@ -503,8 +505,10 @@ class DexcomShareFollowManager: NSObject {
         guard !UserDefaults.standard.isMaster, UserDefaults.standard.followerDataSourceType == .dexcomShare else { return }
         guard let dexcomShareSessionId = self.dexcomShareSessionId, UserDefaults.standard.dexcomShareRegion != .none else { return }
 
-        // throttle the events fetch - insulin events are logged only occasionally, no need to hammer the server every minute
-        if let timeStampLastEventsFetchAttempt = timeStampLastEventsFetchAttempt, Date().timeIntervalSince(timeStampLastEventsFetchAttempt) < ConstantsDexcomShare.dexcomShareEventsFetchIntervalInSeconds {
+        // throttle the events fetch - insulin events are logged only occasionally, no need to hammer the server every minute.
+        // after several consecutive failures (eg Dexcom keeps rejecting the signed request) back off to a much longer interval
+        let eventsFetchInterval = eventsFetchFailedCount >= ConstantsDexcomShare.dexcomShareEventsFetchMaxFailuresBeforeBackoff ? ConstantsDexcomShare.dexcomShareEventsFetchBackoffIntervalInSeconds : ConstantsDexcomShare.dexcomShareEventsFetchIntervalInSeconds
+        if let timeStampLastEventsFetchAttempt = timeStampLastEventsFetchAttempt, Date().timeIntervalSince(timeStampLastEventsFetchAttempt) < eventsFetchInterval {
             return
         }
         timeStampLastEventsFetchAttempt = Date()
@@ -536,17 +540,27 @@ class DexcomShareFollowManager: NSObject {
     /// Stores insulin events downloaded from Dexcom Share as insulin treatments, deduping against existing treatments.
     /// Must be called on the main thread.
     private func processInsulinEvents(_ insulinEvents: [(timeStamp: Date, value: Double)]) {
+        let dedupeWindow = ConstantsDexcomShare.insulinImportDedupeWindowInSeconds
+
+        // one fetch spanning all events, deduping happens in memory - the same 24 hour window is re-fetched every cycle so most events will already exist
+        let earliestEventDate = insulinEvents.map { $0.timeStamp }.min() ?? Date()
+        let latestEventDate = insulinEvents.map { $0.timeStamp }.max() ?? Date()
+        var existingTreatments = treatmentEntryAccessor.getTreatments(fromDate: earliestEventDate.addingTimeInterval(-dedupeWindow), toDate: latestEventDate.addingTimeInterval(dedupeWindow), on: coreDataManager.mainManagedObjectContext)
+
         var didAddTreatment = false
 
         for insulinEvent in insulinEvents {
             // sanity check on the value
             guard insulinEvent.value > 0, insulinEvent.value < 200 else { continue }
 
-            // dedupe : skip if a non-deleted insulin treatment with (almost) the same timestamp and amount already exists
-            let existingTreatments = treatmentEntryAccessor.getTreatments(fromDate: insulinEvent.timeStamp.addingTimeInterval(-ConstantsHealthKit.carbsImportDedupeWindowInSeconds), toDate: insulinEvent.timeStamp.addingTimeInterval(ConstantsHealthKit.carbsImportDedupeWindowInSeconds), on: coreDataManager.mainManagedObjectContext)
-            if existingTreatments.contains(where: { $0.treatmentType == .Insulin && !$0.treatmentdeleted && abs($0.value - insulinEvent.value) < 0.01 }) { continue }
+            // dedupe : skip if an insulin treatment with the same timestamp (within a small window) and amount already exists.
+            // deleted treatments count as duplicates too, otherwise a dose the user deliberately deleted would be re-imported on the next fetch of the same 24 hour window
+            if existingTreatments.contains(where: { $0.treatmentType == .Insulin && abs($0.date.timeIntervalSince(insulinEvent.timeStamp)) <= dedupeWindow && abs($0.value - insulinEvent.value) < 0.01 }) { continue }
 
-            _ = TreatmentEntry(date: insulinEvent.timeStamp, value: insulinEvent.value, treatmentType: .Insulin, nightscoutEventType: nil, enteredBy: "Dexcom Share", nsManagedObjectContext: coreDataManager.mainManagedObjectContext)
+            let treatmentEntry = TreatmentEntry(date: insulinEvent.timeStamp, value: insulinEvent.value, treatmentType: .Insulin, nightscoutEventType: nil, enteredBy: ConstantsDexcomShare.dexcomShareEnteredBy, nsManagedObjectContext: coreDataManager.mainManagedObjectContext)
+
+            // also dedupe against treatments created earlier in this same batch
+            existingTreatments.append(treatmentEntry)
 
             didAddTreatment = true
 
@@ -590,10 +604,13 @@ class DexcomShareFollowManager: NSObject {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.addValue("Dexcom Share/3.0.2.11 CFNetwork/1390 Darwin/22.0.0", forHTTPHeaderField: "User-Agent")
         request.httpBody = Data()
+        request.timeoutInterval = ConstantsDexcomShare.dexcomShareEventsFetchTimeoutInSeconds
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
         if let http = response as? HTTPURLResponse, http.statusCode == 401 {
+            // clear the session so the next glucose download cycle re-logins, same as the glucose endpoint does
+            self.dexcomShareSessionId = nil
             throw DexcomShareFollowError.sessionExpired
         }
 
@@ -604,13 +621,19 @@ class DexcomShareFollowManager: NSObject {
         return parseInsulinEvents(fromEventsResponse: data)
     }
 
+    /// shared plain ISO8601 formatter (without fractional seconds) - formatter creation is expensive, so create it once
+    private static let iso8601DateFormatter: ISO8601DateFormatter = {
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime]
+        return dateFormatter
+    }()
+
     /// Builds the signed request expected by the Dexcom Share events endpoint : header.payload.signature, all base64url encoded.
     private func buildSignedEventsRequest(sessionId: String, region: DexcomShareRegion) -> String {
-        let iso8601DateFormatter = ISO8601DateFormatter()
-        iso8601DateFormatter.formatOptions = [.withInternetDateTime]
+        let iso8601DateFormatter = DexcomShareFollowManager.iso8601DateFormatter
 
         // request events of the last 24 hours
-        let lastSyncTimestamp = iso8601DateFormatter.string(from: Date(timeIntervalSinceNow: -ConstantsDexcomShare.dexcomShareEventsFetchWindowInHours * 3600.0))
+        let lastSyncTimestamp = iso8601DateFormatter.string(from: Date(timeIntervalSinceNow: -TimeInterval(hours: ConstantsDexcomShare.dexcomShareEventsFetchWindowInHours)))
 
         let header: [String: Any] = [
             "AccId": dexcomShareAccountId ?? "",
@@ -667,9 +690,6 @@ class DexcomShareFollowManager: NSObject {
         var insulinEvents: [(timeStamp: Date, value: Double)] = []
         scanForInsulinEvents(in: jsonObject, appendingTo: &insulinEvents)
 
-        // sort by newest first
-        insulinEvents.sort { $0.timeStamp > $1.timeStamp }
-
         return insulinEvents
     }
 
@@ -680,12 +700,17 @@ class DexcomShareFollowManager: NSObject {
                 scanForInsulinEvents(in: element, appendingTo: &insulinEvents)
             }
         } else if let dictionary = jsonObject as? [String: Any] {
-            // does this dictionary look like an insulin event?
+            // does this dictionary look like an insulin dose event? require 'insulin' in the type but exclude
+            // things that merely mention insulin (insulin-on-board, recommendations, basal/long-acting doses,
+            // pump status, settings echoes) - basal doses in particular must not be imported as boluses
             var isInsulinEvent = false
             for typeKey in ["EventType", "Type", "EventName", "SubType", "Name"] {
-                if let typeValue = dictionary[typeKey] as? String, typeValue.lowercased().contains("insulin") {
-                    isInsulinEvent = true
-                    break
+                if let typeValue = dictionary[typeKey] as? String {
+                    let lowercasedType = typeValue.lowercased()
+                    if lowercasedType.contains("insulin"), !["basal", "long", "onboard", "iob", "recommend", "status", "suspend", "setting"].contains(where: { lowercasedType.contains($0) }) {
+                        isInsulinEvent = true
+                        break
+                    }
                 }
             }
 
@@ -722,19 +747,17 @@ class DexcomShareFollowManager: NSObject {
             guard let timeValue = dictionary[timeKey] else { continue }
 
             if let timeString = timeValue as? String {
-                // dexcom "/Date(...)/" format
-                if let date = parseDexcomDate(dexcomDateString: timeString) {
-                    return date
-                }
-                // ISO8601, with or without fractional seconds
-                let iso8601DateFormatter = ISO8601DateFormatter()
-                iso8601DateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                if let date = iso8601DateFormatter.date(from: timeString) {
-                    return date
-                }
-                iso8601DateFormatter.formatOptions = [.withInternetDateTime]
-                if let date = iso8601DateFormatter.date(from: timeString) {
-                    return date
+                // dexcom "/Date(...)/" format - only for strings that actually use that format, because
+                // parseDexcomDate would otherwise 'succeed' on ISO8601 strings and return a bogus near-epoch date
+                if timeString.hasPrefix("/Date(") {
+                    if let date = parseDexcomDate(dexcomDateString: timeString) {
+                        return date
+                    }
+                } else {
+                    // ISO8601, with or without fractional seconds (shared, cached formatters)
+                    if let date = ISO8601DateFormatter.withFractionalSeconds.date(from: timeString) ?? DexcomShareFollowManager.iso8601DateFormatter.date(from: timeString) {
+                        return date
+                    }
                 }
             } else if let milliseconds = timeValue as? Double, milliseconds > 1_000_000_000_000 {
                 return Date(timeIntervalSince1970: milliseconds / 1000)
@@ -900,11 +923,14 @@ class DexcomShareFollowManager: NSObject {
             if let keyPathEnum = UserDefaults.Key(rawValue: keyPath) {
                 switch keyPathEnum {
                 case UserDefaults.Key.importInsulinFromDexcomShare:
-                    // if the user just enabled the insulin import, reset the throttle and trigger a download cycle so the import starts immediately
-                    if UserDefaults.standard.importInsulinFromDexcomShare {
+                    // if the user just enabled the insulin import, reset the throttle/backoff and trigger the events fetch so the import starts immediately.
+                    // only the events fetch is triggered (not a full download cycle) so this can never cause a spurious glucose download or Nightscout sync
+                    if self.keyValueObserverTimeKeeper.verifyKey(forKey: keyPathEnum.rawValue, withMinimumDelayMilliSeconds: 200), UserDefaults.standard.importInsulinFromDexcomShare {
                         self.timeStampLastEventsFetchAttempt = nil
                         self.eventsFetchFailedCount = 0
-                        self.download()
+                        Task { [weak self] in
+                            await self?.downloadAndProcessInsulinEvents()
+                        }
                     }
 
                 case UserDefaults.Key.isMaster, UserDefaults.Key.followerDataSourceType, UserDefaults.Key.dexcomShareAccountName, UserDefaults.Key.dexcomSharePassword:

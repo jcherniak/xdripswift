@@ -11,4 +11,7 @@ enum ConstantsHealthKit {
     /// when importing a carb sample from healthkit, if a carbs treatment already exists within this window (in seconds) around the sample timestamp with (almost) the same amount, the sample is considered a duplicate and not imported
     static let carbsImportDedupeWindowInSeconds = 150.0
 
+    /// how far back (in hours) to look for insulin treatments that still need to be written to healthkit - a fixed lookback window (instead of a high-watermark) so that backdated treatments are not missed
+    static let insulinStoreLookbackInHours = 48.0
+
 }

@@ -144,17 +144,22 @@ class SettingsViewHealthKitSettingsViewModel:SettingsViewModelProtocol {
                 (isOn: Bool) in
                 trace("importCarbsFromHealthKit changed by user to %{public}@", log: self.log, category: ConstantsLog.categorySettingsViewHealthKitSettingsViewModel, type: .info, isOn.description)
 
-                // if value changed to on, then ask authorization to read carb entries - if authorization was already determined (granted or denied) then this doesn't show any UI
+                // if value changed to on, then ask authorization to read carb entries - if authorization was already determined (granted or denied) then this doesn't show any UI.
+                // the setting is only stored once the authorization request has resolved, so that the HealthKitManager (which observes the setting) doesn't execute its query while the authorization dialog is still open
                 if isOn, let carbsType = HKObjectType.quantityType(forIdentifier: .dietaryCarbohydrates) {
                     HKHealthStore().requestAuthorization(toShare: nil, read: Set([carbsType]), completion: { (success: Bool, error: Error?) in
                         if let error = error {
                             trace("failed to request authorization to read carb entries from healthkit, error = %{public}@", log: self.log, category: ConstantsLog.categorySettingsViewHealthKitSettingsViewModel, type: .error, error.localizedDescription)
                         }
-                    })
-                }
 
-                // set UserDefaults.standard.importCarbsFromHealthKit to isOn - the HealthKitManager observes this setting and will start or stop the continuous import
-                UserDefaults.standard.importCarbsFromHealthKit = isOn
+                        DispatchQueue.main.async {
+                            // set UserDefaults.standard.importCarbsFromHealthKit - the HealthKitManager observes this setting and will start the continuous import
+                            UserDefaults.standard.importCarbsFromHealthKit = true
+                        }
+                    })
+                } else {
+                    UserDefaults.standard.importCarbsFromHealthKit = isOn
+                }
 
             })
 
@@ -163,17 +168,22 @@ class SettingsViewHealthKitSettingsViewModel:SettingsViewModelProtocol {
                 (isOn: Bool) in
                 trace("importInsulinFromDexcomShare changed by user to %{public}@", log: self.log, category: ConstantsLog.categorySettingsViewHealthKitSettingsViewModel, type: .info, isOn.description)
 
-                // if value changed to on, then ask authorization to write insulin entries - if authorization was already determined (granted or denied) then this doesn't show any UI
+                // if value changed to on, then ask authorization to write insulin entries - if authorization was already determined (granted or denied) then this doesn't show any UI.
+                // the setting is only stored once the authorization request has resolved, so that the managers observing it don't run while the authorization dialog is still open
                 if isOn, let insulinType = HKObjectType.quantityType(forIdentifier: .insulinDelivery) {
                     HKHealthStore().requestAuthorization(toShare: Set([insulinType]), read: nil, completion: { (success: Bool, error: Error?) in
                         if let error = error {
                             trace("failed to request authorization to write insulin entries to healthkit, error = %{public}@", log: self.log, category: ConstantsLog.categorySettingsViewHealthKitSettingsViewModel, type: .error, error.localizedDescription)
                         }
-                    })
-                }
 
-                // set UserDefaults.standard.importInsulinFromDexcomShare to isOn - the DexcomShareFollowManager and HealthKitManager observe this setting
-                UserDefaults.standard.importInsulinFromDexcomShare = isOn
+                        DispatchQueue.main.async {
+                            // set UserDefaults.standard.importInsulinFromDexcomShare - the DexcomShareFollowManager and HealthKitManager observe this setting
+                            UserDefaults.standard.importInsulinFromDexcomShare = true
+                        }
+                    })
+                } else {
+                    UserDefaults.standard.importInsulinFromDexcomShare = isOn
+                }
 
             })
         }

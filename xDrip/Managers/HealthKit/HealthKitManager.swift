@@ -45,6 +45,12 @@ public class HealthKitManager: NSObject {
 
     /// set of insulin treatment timestamps currently being written to HealthKit to prevent overlap across runs
     private var timeStampsOfInsulinTreatmentsCurrentlyBeingSaved = Set<Date>()
+
+    /// true while a coalesced storeInsulinTreatments call is pending - avoids running a full store cycle for every single nightscoutTreatmentsUpdateCounter bump
+    private var storeInsulinTreatmentsScheduled = false
+
+    /// constant for key in ApplicationManager.shared.addClosureToRunWhenAppWillEnterForeground - restart the carbs import and store pending insulin treatments
+    private let applicationManagerKeyRestartHealthKitSync = "HealthKitManager-RestartHealthKitSync"
     
     /// serial queue to ensure atomic updates of the latest HealthKit store timestamp
     /// the idea is to use this and force all updates to be done
@@ -83,6 +89,12 @@ public class HealthKitManager: NSObject {
 
         // store any insulin treatments not yet written to HealthKit
         storeInsulinTreatments()
+
+        // when the app comes to the foreground, restart the carbs import (this heals a query that died, eg because it was executed before the user answered the authorization dialog) and store any pending insulin treatments
+        ApplicationManager.shared.addClosureToRunWhenAppWillEnterForeground(key: applicationManagerKeyRestartHealthKitSync, closure: { [weak self] in
+            self?.startOrStopCarbsImport()
+            self?.storeInsulinTreatments()
+        })
     }
     
     // MARK: - private functions
@@ -216,8 +228,8 @@ public class HealthKitManager: NSObject {
             self.carbsImportQuery = nil
         }
 
-        // healthkit must be available and the setting must be enabled
-        guard HKHealthStore.isHealthDataAvailable(), UserDefaults.standard.importCarbsFromHealthKit, let carbsType = carbsType ?? HKObjectType.quantityType(forIdentifier: .dietaryCarbohydrates) else { return }
+        // healthkit must be available and the setting must be enabled - carbsType is always initialized when healthkit is available
+        guard HKHealthStore.isHealthDataAvailable(), UserDefaults.standard.importCarbsFromHealthKit, let carbsType = carbsType else { return }
 
         // restore the previously persisted anchor, if any - this ensures samples delivered before are not delivered again, even across app restarts
         var anchor: HKQueryAnchor?
@@ -226,7 +238,7 @@ public class HealthKitManager: NSObject {
         }
 
         // limit the initial import (i.e. when there's no anchor yet) to a reasonable period, otherwise the full HealthKit carbs history would be imported
-        let predicate = HKQuery.predicateForSamples(withStart: Date(timeIntervalSinceNow: -ConstantsHealthKit.carbsImportMaxAgeInDays * 24.0 * 3600.0), end: nil, options: [])
+        let predicate = HKQuery.predicateForSamples(withStart: Date(timeIntervalSinceNow: -TimeInterval(days: ConstantsHealthKit.carbsImportMaxAgeInDays)), end: nil, options: [])
 
         let query = HKAnchoredObjectQuery(type: carbsType, predicate: predicate, anchor: anchor, limit: HKObjectQueryNoLimit, resultsHandler: { [weak self] _, samples, _, newAnchor, error in
             self?.processImportedCarbsSamples(samples: samples, newAnchor: newAnchor, error: error)
@@ -254,31 +266,42 @@ public class HealthKitManager: NSObject {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 
-            var didAddTreatment = false
+            // skip samples written by this app itself, to avoid any risk of an import/export loop
+            let quantitySamples = (samples ?? []).compactMap { $0 as? HKQuantitySample }.filter { $0.sourceRevision.source.bundleIdentifier != Bundle.main.bundleIdentifier }
 
-            for sample in (samples ?? []).compactMap({ $0 as? HKQuantitySample }) {
-                // skip samples written by this app itself, to avoid any risk of an import/export loop
-                if sample.sourceRevision.source.bundleIdentifier == Bundle.main.bundleIdentifier { continue }
+            if !quantitySamples.isEmpty {
+                let dedupeWindow = ConstantsHealthKit.carbsImportDedupeWindowInSeconds
 
-                let grams = sample.quantity.doubleValue(for: .gram())
-                guard grams > 0 else { continue }
+                // one fetch spanning the whole batch, deduping happens in memory - the initial import can deliver a large batch and a fetch per sample would block the main thread
+                let earliestSampleDate = quantitySamples.map { $0.startDate }.min() ?? Date()
+                let latestSampleDate = quantitySamples.map { $0.startDate }.max() ?? Date()
+                var existingTreatments = self.treatmentEntryAccessor.getTreatments(fromDate: earliestSampleDate.addingTimeInterval(-dedupeWindow), toDate: latestSampleDate.addingTimeInterval(dedupeWindow), on: self.coreDataManager.mainManagedObjectContext)
 
-                // dedupe : skip if a non-deleted carbs treatment with (almost) the same timestamp and amount already exists (e.g. the same entry already came in via Nightscout)
-                let existingTreatments = self.treatmentEntryAccessor.getTreatments(fromDate: sample.startDate.addingTimeInterval(-ConstantsHealthKit.carbsImportDedupeWindowInSeconds), toDate: sample.startDate.addingTimeInterval(ConstantsHealthKit.carbsImportDedupeWindowInSeconds), on: self.coreDataManager.mainManagedObjectContext)
-                if existingTreatments.contains(where: { $0.treatmentType == .Carbs && !$0.treatmentdeleted && abs($0.value - grams) < 0.5 }) { continue }
+                var didAddTreatment = false
 
-                _ = TreatmentEntry(date: sample.startDate, value: grams, treatmentType: .Carbs, nightscoutEventType: nil, enteredBy: "Apple Health", nsManagedObjectContext: self.coreDataManager.mainManagedObjectContext)
+                for sample in quantitySamples {
+                    let grams = sample.quantity.doubleValue(for: .gram())
+                    guard grams > 0 else { continue }
 
-                didAddTreatment = true
+                    // dedupe : skip if a carbs treatment with (almost) the same timestamp and amount already exists (e.g. the same entry already came in via Nightscout) - deleted treatments count as duplicates too, so an entry the user deliberately deleted is not resurrected
+                    if existingTreatments.contains(where: { $0.treatmentType == .Carbs && abs($0.date.timeIntervalSince(sample.startDate)) <= dedupeWindow && abs($0.value - grams) < 0.5 }) { continue }
 
-                trace("imported carbs treatment from HealthKit, timestamp = %{public}@, grams = %{public}@", log: self.log, category: ConstantsLog.categoryHealthKitManager, type: .info, sample.startDate.description, grams.description)
-            }
+                    let treatmentEntry = TreatmentEntry(date: sample.startDate, value: grams, treatmentType: .Carbs, nightscoutEventType: nil, enteredBy: "Apple Health", nsManagedObjectContext: self.coreDataManager.mainManagedObjectContext)
 
-            if didAddTreatment {
-                self.coreDataManager.saveChanges()
+                    // also dedupe against treatments created earlier in this same batch
+                    existingTreatments.append(treatmentEntry)
 
-                // trigger an update of the chart and the treatments list (and, via the observer in this class, the insulin store)
-                UserDefaults.standard.nightscoutTreatmentsUpdateCounter = UserDefaults.standard.nightscoutTreatmentsUpdateCounter + 1
+                    didAddTreatment = true
+
+                    trace("imported carbs treatment from HealthKit, timestamp = %{public}@, grams = %{public}@", log: self.log, category: ConstantsLog.categoryHealthKitManager, type: .info, sample.startDate.description, grams.description)
+                }
+
+                if didAddTreatment {
+                    self.coreDataManager.saveChanges()
+
+                    // trigger an update of the chart and the treatments list
+                    UserDefaults.standard.nightscoutTreatmentsUpdateCounter = UserDefaults.standard.nightscoutTreatmentsUpdateCounter + 1
+                }
             }
 
             // persist the new anchor only after the samples have been processed, so nothing is lost if the app is killed in between
@@ -290,36 +313,51 @@ public class HealthKitManager: NSObject {
 
     // MARK: - insulin treatments store
 
-    /// writes insulin treatments (boluses) to HealthKit, only if the importInsulinFromDexcomShare setting is enabled and HealthKit sharing is authorized for insulin
+    /// writes insulin treatments imported from Dexcom Share to HealthKit, only if the importInsulinFromDexcomShare setting is enabled and HealthKit sharing is authorized for insulin
     ///
-    /// this covers insulin treatments imported from Dexcom Share while in follower mode, as well as insulin treatments downloaded from Nightscout or entered manually
+    /// instead of a high-watermark (which would permanently skip backdated doses), this queries HealthKit for the insulin samples this app already wrote in a fixed lookback window and writes whichever treatments are missing - self-healing and safe for out-of-order arrivals
     public func storeInsulinTreatments() {
-        // ensure this function runs on main thread because it accesses objects from the main managedObjectContext
-        if !Thread.isMainThread {
-            DispatchQueue.main.async { [weak self] in
-                self?.storeInsulinTreatments()
-            }
-            return
-        }
-
-        // setting must be on and healthkit must be available
-        guard UserDefaults.standard.importInsulinFromDexcomShare, HKHealthStore.isHealthDataAvailable(), let insulinType = insulinType ?? HKObjectType.quantityType(forIdentifier: .insulinDelivery) else { return }
+        // setting must be on and healthkit must be available - insulinType is always initialized when healthkit is available
+        guard UserDefaults.standard.importInsulinFromDexcomShare, HKHealthStore.isHealthDataAvailable(), let insulinType = insulinType else { return }
 
         // sharing insulin data must be authorized
         guard healthStore.authorizationStatus(for: insulinType) == .sharingAuthorized else { return }
 
-        // when running for the first time, only store insulin treatments of the last 24 hours - initialize the watermark accordingly
-        if UserDefaults.standard.timeStampLatestHealthKitStoreInsulinTreatment == nil {
-            UserDefaults.standard.timeStampLatestHealthKitStoreInsulinTreatment = Date(timeIntervalSinceNow: -24.0 * 3600.0)
-        }
+        let lookbackStartDate = Date(timeIntervalSinceNow: -TimeInterval(hours: ConstantsHealthKit.insulinStoreLookbackInHours))
 
-        // snapshot of the latest saved timestamp (strict boundary) and in-flight timestamps (to avoid re-saving while previous saves are not completed)
-        let strictLatestStoredTimeStamp = UserDefaults.standard.timeStampLatestHealthKitStoreInsulinTreatment ?? Date.distantPast
+        // find the insulin samples this app already wrote in the lookback window, then write the missing treatments
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [HKQuery.predicateForObjects(from: HKSource.default()), HKQuery.predicateForSamples(withStart: lookbackStartDate, end: nil, options: [])])
+
+        let query = HKSampleQuery(sampleType: insulinType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil, resultsHandler: { [weak self] _, samples, error in
+            guard let self = self else { return }
+
+            if let error = error {
+                trace("in storeInsulinTreatments, failed to query existing insulin samples, error = %{public}@", log: self.log, category: ConstantsLog.categoryHealthKitManager, type: .error, error.localizedDescription)
+                return
+            }
+
+            let existingSampleKeys = Set(((samples as? [HKQuantitySample]) ?? []).map { HealthKitManager.insulinSampleKey(date: $0.startDate, value: $0.quantity.doubleValue(for: .internationalUnit())) })
+
+            // treatments must be fetched on the main thread because the main managedObjectContext is used
+            DispatchQueue.main.async { [weak self] in
+                self?.storeMissingInsulinTreatments(existingSampleKeys: existingSampleKeys, fromDate: lookbackStartDate, insulinType: insulinType)
+            }
+        })
+
+        healthStore.execute(query)
+    }
+
+    /// writes the insulin treatments (imported from Dexcom Share) in the lookback window that don't have a matching HealthKit sample yet. Must be called on the main thread.
+    private func storeMissingInsulinTreatments(existingSampleKeys: Set<String>, fromDate: Date, insulinType: HKQuantityType) {
+        // snapshot of in-flight timestamps (to avoid re-saving while previous saves are not completed)
         let timeStampsCurrentlyInFlight: Set<Date> = healthKitTimestampUpdateQueue.sync { timeStampsOfInsulinTreatmentsCurrentlyBeingSaved }
 
-        // get insulin treatments not yet stored in healthkit
-        let insulinTreatmentsToStore = treatmentEntryAccessor.getTreatments(fromDate: strictLatestStoredTimeStamp, toDate: nil, on: coreDataManager.mainManagedObjectContext).filter {
-            $0.treatmentType == .Insulin && !$0.treatmentdeleted && $0.value > 0 && $0.date > strictLatestStoredTimeStamp && !timeStampsCurrentlyInFlight.contains($0.date)
+        // only treatments imported from Dexcom Share are written - the setting is specifically about mirroring the insulin logged in the Dexcom app to Apple Health
+        let insulinTreatmentsToStore = treatmentEntryAccessor.getTreatments(fromDate: fromDate, toDate: nil, on: coreDataManager.mainManagedObjectContext).filter {
+            $0.treatmentType == .Insulin && !$0.treatmentdeleted && $0.value > 0
+                && $0.enteredBy == ConstantsDexcomShare.dexcomShareEnteredBy
+                && !timeStampsCurrentlyInFlight.contains($0.date)
+                && !existingSampleKeys.contains(HealthKitManager.insulinSampleKey(date: $0.date, value: $0.value))
         }
 
         let insulinUnit = HKUnit.internationalUnit()
@@ -339,24 +377,36 @@ public class HealthKitManager: NSObject {
 
             healthStore.save(sample, withCompletion: { [weak self] (success: Bool, error: Error?) in
                 guard let self = self else { return }
-                if success {
-                    // remove from in-flight set first, then perform atomic, monotonic watermark update
-                    self.healthKitTimestampUpdateQueue.async {
-                        self.timeStampsOfInsulinTreatmentsCurrentlyBeingSaved.remove(timeStampOfTreatmentToStore)
 
-                        let existingTimeStamp = UserDefaults.standard.timeStampLatestHealthKitStoreInsulinTreatment ?? Date.distantPast
-                        UserDefaults.standard.timeStampLatestHealthKitStoreInsulinTreatment = max(existingTimeStamp, timeStampOfTreatmentToStore)
-                    }
-                } else {
-                    // ensure in-flight removal even on failure
-                    self.healthKitTimestampUpdateQueue.async {
-                        self.timeStampsOfInsulinTreatmentsCurrentlyBeingSaved.remove(timeStampOfTreatmentToStore)
-                    }
-                    if let error = error {
-                        trace("failed to store insulin treatment in healthkit, error = %{public}@", log: self.log, category: ConstantsLog.categoryHealthKitManager, type: .error, error.localizedDescription)
-                    }
+                // once the save completed (successfully or not) the sample is either visible to the next HealthKit query or should be retried, so the in-flight marker can be removed
+                self.healthKitTimestampUpdateQueue.async {
+                    self.timeStampsOfInsulinTreatmentsCurrentlyBeingSaved.remove(timeStampOfTreatmentToStore)
+                }
+
+                if !success, let error = error {
+                    trace("failed to store insulin treatment in healthkit, error = %{public}@", log: self.log, category: ConstantsLog.categoryHealthKitManager, type: .error, error.localizedDescription)
                 }
             })
+        }
+    }
+
+    /// stable key identifying an insulin sample/treatment by second-rounded timestamp and hundredth-of-a-unit value - used to match treatments against samples already written to HealthKit
+    private static func insulinSampleKey(date: Date, value: Double) -> String {
+        return "\(Int(date.timeIntervalSince1970))-\(Int((value * 100).rounded()))"
+    }
+
+    /// coalesces multiple triggers into a single storeInsulinTreatments call one second later - the nightscoutTreatmentsUpdateCounter can bump several times during a sync cycle
+    private func scheduleStoreInsulinTreatments() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, !self.storeInsulinTreatmentsScheduled else { return }
+
+            self.storeInsulinTreatmentsScheduled = true
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self = self else { return }
+                self.storeInsulinTreatmentsScheduled = false
+                self.storeInsulinTreatments()
+            }
         }
     }
 
@@ -394,8 +444,8 @@ public class HealthKitManager: NSObject {
 
                 case UserDefaults.Key.nightscoutTreatmentsUpdateCounter:
 
-                    // treatments were added/updated (Dexcom Share insulin import, Nightscout download, manual entry, carbs import) - write any new insulin treatments to HealthKit
-                    storeInsulinTreatments()
+                    // treatments were added/updated (Dexcom Share insulin import, Nightscout download, manual entry, carbs import) - write any new insulin treatments to HealthKit, coalesced because the counter can bump several times in quick succession
+                    scheduleStoreInsulinTreatments()
 
                 default:
                     break
@@ -415,5 +465,7 @@ public class HealthKitManager: NSObject {
         if let carbsImportQuery = carbsImportQuery {
             healthStore.stop(carbsImportQuery)
         }
+
+        ApplicationManager.shared.removeClosureToRunWhenAppWillEnterForeground(key: applicationManagerKeyRestartHealthKitSync)
     }
 }

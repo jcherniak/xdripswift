@@ -281,9 +281,6 @@ extension UserDefaults {
         /// should insulin entries be imported from Dexcom Share while in follower mode (and written to healthkit), true or false
         case importInsulinFromDexcomShare = "importInsulinFromDexcomShare"
 
-        /// timestamp of last insulin treatment that was stored in healthkit
-        case timeStampLatestHealthKitStoreInsulinTreatment = "timeStampLatestHealthKitStoreInsulinTreatment"
-
         // Speak readings
         
         /// speak readings
@@ -2269,16 +2266,6 @@ extension UserDefaults {
         }
         set {
             set(newValue, forKey: Key.importInsulinFromDexcomShare.rawValue)
-        }
-    }
-
-    /// timestamp of last insulin treatment that was stored in healthkit
-    var timeStampLatestHealthKitStoreInsulinTreatment: Date? {
-        get {
-            return object(forKey: Key.timeStampLatestHealthKitStoreInsulinTreatment.rawValue) as? Date
-        }
-        set {
-            set(newValue, forKey: Key.timeStampLatestHealthKitStoreInsulinTreatment.rawValue)
         }
     }
     
