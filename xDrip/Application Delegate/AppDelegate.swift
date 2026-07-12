@@ -23,7 +23,32 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         trace("****************************************", log: log, category: ConstantsLog.categoryAppDelegate, type: .info)
         trace("*** in didFinishLaunchingWithOptions ***", log: log, category: ConstantsLog.categoryAppDelegate, type: .info)
         trace("****************************************", log: log, category: ConstantsLog.categoryAppDelegate, type: .info)
+
+        setupTabBarAppearance()
+
         return true
+    }
+
+    /// explicitly configure the tab bar appearance - without this, unselected tab bar items
+    /// are rendered invisible (black on black) on recent iOS versions because the storyboard
+    /// only sets the legacy barTintColor which is ignored by UITabBarAppearance-based rendering
+    private func setupTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .black
+
+        for itemAppearance in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance, appearance.compactInlineLayoutAppearance] {
+            itemAppearance.normal.iconColor = .gray
+            itemAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.gray]
+            itemAppearance.selected.iconColor = .systemBlue
+            itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.systemBlue]
+        }
+
+        let tabBarAppearanceProxy = UITabBar.appearance()
+        tabBarAppearanceProxy.standardAppearance = appearance
+        tabBarAppearanceProxy.scrollEdgeAppearance = appearance
+        tabBarAppearanceProxy.unselectedItemTintColor = .gray
+        tabBarAppearanceProxy.tintColor = .systemBlue
     }
 
     /// used to allow/prevent the specific views from changing orientation when rotating the device
