@@ -452,6 +452,14 @@ class Texts_SettingsView {
     static let labelHealthKit: String = {
         return NSLocalizedString("settingsviews_healthkit", tableName: filename, bundle: Bundle.main, value: "Write Data to Apple Health", comment: "healthkit settings, literally 'healthkit'")
     }()
+
+    static let labelImportCarbsFromHealthKit: String = {
+        return NSLocalizedString("settingsviews_importcarbsfromhealthkit", tableName: filename, bundle: Bundle.main, value: "Import Carbs from Apple Health", comment: "healthkit settings, should carb entries be continuously imported from Apple Health")
+    }()
+
+    static let labelImportInsulinFromDexcomShare: String = {
+        return NSLocalizedString("settingsviews_importinsulinfromdexcomshare", tableName: filename, bundle: Bundle.main, value: "Import Insulin from Dexcom Share", comment: "healthkit settings, should insulin entries be imported from Dexcom Share when in follower mode and written to Apple Health")
+    }()
     
     // MARK: - Section Dexcom Share Upload (including Share Follower)
     

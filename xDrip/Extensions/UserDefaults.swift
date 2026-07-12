@@ -271,7 +271,19 @@ extension UserDefaults {
         
         /// timestamp of last bgreading that was stored in healthkit
         case timeStampLatestHealthKitStoreBgReading = "timeStampLatestHealthKitStoreBgReading"
-        
+
+        /// should carb entries be imported from healthkit, true or false
+        case importCarbsFromHealthKit = "importCarbsFromHealthKit"
+
+        /// persisted HKQueryAnchor (as Data) used for the continuous carbs import from healthkit
+        case healthKitCarbsQueryAnchor = "healthKitCarbsQueryAnchor"
+
+        /// should insulin entries be imported from Dexcom Share while in follower mode (and written to healthkit), true or false
+        case importInsulinFromDexcomShare = "importInsulinFromDexcomShare"
+
+        /// timestamp of last insulin treatment that was stored in healthkit
+        case timeStampLatestHealthKitStoreInsulinTreatment = "timeStampLatestHealthKitStoreInsulinTreatment"
+
         // Speak readings
         
         /// speak readings
@@ -2226,6 +2238,47 @@ extension UserDefaults {
         }
         set {
             set(newValue, forKey: Key.timeStampLatestHealthKitStoreBgReading.rawValue)
+        }
+    }
+
+    /// should carb entries be imported from healthkit, true or false
+    /// This is just the user selection, read authorization is requested when the user enables the setting
+    @objc dynamic var importCarbsFromHealthKit: Bool {
+        get {
+            return bool(forKey: Key.importCarbsFromHealthKit.rawValue)
+        }
+        set {
+            set(newValue, forKey: Key.importCarbsFromHealthKit.rawValue)
+        }
+    }
+
+    /// persisted HKQueryAnchor (as Data) used for the continuous carbs import from healthkit - ensures samples are only imported once, even across app restarts
+    var healthKitCarbsQueryAnchor: Data? {
+        get {
+            return object(forKey: Key.healthKitCarbsQueryAnchor.rawValue) as? Data
+        }
+        set {
+            set(newValue, forKey: Key.healthKitCarbsQueryAnchor.rawValue)
+        }
+    }
+
+    /// should insulin entries be imported from Dexcom Share while in follower mode (and written to healthkit), true or false
+    @objc dynamic var importInsulinFromDexcomShare: Bool {
+        get {
+            return bool(forKey: Key.importInsulinFromDexcomShare.rawValue)
+        }
+        set {
+            set(newValue, forKey: Key.importInsulinFromDexcomShare.rawValue)
+        }
+    }
+
+    /// timestamp of last insulin treatment that was stored in healthkit
+    var timeStampLatestHealthKitStoreInsulinTreatment: Date? {
+        get {
+            return object(forKey: Key.timeStampLatestHealthKitStoreInsulinTreatment.rawValue) as? Date
+        }
+        set {
+            set(newValue, forKey: Key.timeStampLatestHealthKitStoreInsulinTreatment.rawValue)
         }
     }
     

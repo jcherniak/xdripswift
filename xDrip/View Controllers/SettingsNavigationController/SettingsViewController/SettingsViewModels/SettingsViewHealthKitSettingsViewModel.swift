@@ -5,6 +5,12 @@ import os
 fileprivate enum Setting: Int, CaseIterable {
     /// should we write data to Apple Health?
     case enabledHealthKit = 0
+
+    /// should we continuously import carb entries from Apple Health?
+    case importCarbsFromHealthKit = 1
+
+    /// should we import insulin entries from Dexcom Share when in follower mode (and write them to Apple Health)?
+    case importInsulinFromDexcomShare = 2
 }
 
 /// conforms to SettingsViewModelProtocol for all healthkit settings in the first sections screen
@@ -36,9 +42,9 @@ class SettingsViewHealthKitSettingsViewModel:SettingsViewModelProtocol {
     
     func onRowSelect(index: Int) -> SettingsSelectedRowAction {
         guard let setting = Setting(rawValue: index) else { fatalError("Unexpected Section") }
-        
+
         switch setting {
-        case .enabledHealthKit:
+        case .enabledHealthKit, .importCarbsFromHealthKit, .importInsulinFromDexcomShare:
             return .nothing
         }
     }
@@ -53,27 +59,31 @@ class SettingsViewHealthKitSettingsViewModel:SettingsViewModelProtocol {
     
     func settingsRowText(index: Int) -> String {
         guard let setting = Setting(rawValue: index) else { fatalError("Unexpected Section") }
-        
+
         switch setting {
         case .enabledHealthKit:
             return Texts_SettingsView.labelHealthKit
+        case .importCarbsFromHealthKit:
+            return Texts_SettingsView.labelImportCarbsFromHealthKit
+        case .importInsulinFromDexcomShare:
+            return Texts_SettingsView.labelImportInsulinFromDexcomShare
         }
     }
-    
+
     func accessoryType(index: Int) -> UITableViewCell.AccessoryType {
         guard let setting = Setting(rawValue: index) else { fatalError("Unexpected Section") }
-        
+
         switch setting {
-        case .enabledHealthKit:
+        case .enabledHealthKit, .importCarbsFromHealthKit, .importInsulinFromDexcomShare:
             return .none
         }
     }
-    
+
     func detailedText(index: Int) -> String? {
         guard let setting = Setting(rawValue: index) else { fatalError("Unexpected Section") }
-        
+
         switch setting {
-        case .enabledHealthKit:
+        case .enabledHealthKit, .importCarbsFromHealthKit, .importInsulinFromDexcomShare:
             return nil
         }
     }
@@ -126,7 +136,45 @@ class SettingsViewHealthKitSettingsViewModel:SettingsViewModelProtocol {
                 
                 // set UserDefaults.standard.storeReadingsInHealthkit to isOn
                 UserDefaults.standard.storeReadingsInHealthkit = isOn
-                
+
+            })
+
+        case .importCarbsFromHealthKit:
+            return UISwitch(isOn: UserDefaults.standard.importCarbsFromHealthKit, action: {
+                (isOn: Bool) in
+                trace("importCarbsFromHealthKit changed by user to %{public}@", log: self.log, category: ConstantsLog.categorySettingsViewHealthKitSettingsViewModel, type: .info, isOn.description)
+
+                // if value changed to on, then ask authorization to read carb entries - if authorization was already determined (granted or denied) then this doesn't show any UI
+                if isOn, let carbsType = HKObjectType.quantityType(forIdentifier: .dietaryCarbohydrates) {
+                    HKHealthStore().requestAuthorization(toShare: nil, read: Set([carbsType]), completion: { (success: Bool, error: Error?) in
+                        if let error = error {
+                            trace("failed to request authorization to read carb entries from healthkit, error = %{public}@", log: self.log, category: ConstantsLog.categorySettingsViewHealthKitSettingsViewModel, type: .error, error.localizedDescription)
+                        }
+                    })
+                }
+
+                // set UserDefaults.standard.importCarbsFromHealthKit to isOn - the HealthKitManager observes this setting and will start or stop the continuous import
+                UserDefaults.standard.importCarbsFromHealthKit = isOn
+
+            })
+
+        case .importInsulinFromDexcomShare:
+            return UISwitch(isOn: UserDefaults.standard.importInsulinFromDexcomShare, action: {
+                (isOn: Bool) in
+                trace("importInsulinFromDexcomShare changed by user to %{public}@", log: self.log, category: ConstantsLog.categorySettingsViewHealthKitSettingsViewModel, type: .info, isOn.description)
+
+                // if value changed to on, then ask authorization to write insulin entries - if authorization was already determined (granted or denied) then this doesn't show any UI
+                if isOn, let insulinType = HKObjectType.quantityType(forIdentifier: .insulinDelivery) {
+                    HKHealthStore().requestAuthorization(toShare: Set([insulinType]), read: nil, completion: { (success: Bool, error: Error?) in
+                        if let error = error {
+                            trace("failed to request authorization to write insulin entries to healthkit, error = %{public}@", log: self.log, category: ConstantsLog.categorySettingsViewHealthKitSettingsViewModel, type: .error, error.localizedDescription)
+                        }
+                    })
+                }
+
+                // set UserDefaults.standard.importInsulinFromDexcomShare to isOn - the DexcomShareFollowManager and HealthKitManager observe this setting
+                UserDefaults.standard.importInsulinFromDexcomShare = isOn
+
             })
         }
     }
