@@ -29,6 +29,15 @@ enum ConstantsDexcomShare {
     static let dexcomShareFollowLoginPath = "/General/LoginPublisherAccountById"
     /// endpoint to pull latest glucose values
     static let dexcomShareFollowLatestGlucoseValuesPath = "/Publisher/ReadPublisherLatestGlucoseValues"
+
+    /// endpoint to pull events (insulin, carbs, exercise) logged in the Dexcom app - requires a signed request
+    static let dexcomShareFollowReadEventsPath = "/Publisher/ReadEvents"
+
+    /// minimum time in seconds between two attempts to fetch events from Dexcom Share
+    static let dexcomShareEventsFetchIntervalInSeconds = 300.0
+
+    /// how far back (in hours) to request events from Dexcom Share
+    static let dexcomShareEventsFetchWindowInHours = 24.0
     
     /// dummy/failed session ID - used in both upload and follower classes
     static let failedSessionId = "00000000-0000-0000-0000-000000000000"

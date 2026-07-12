@@ -8,6 +8,7 @@
 
 import AudioToolbox
 import AVFoundation
+import CryptoKit
 import Foundation
 import os
 
@@ -48,7 +49,19 @@ class DexcomShareFollowManager: NSObject {
     private var playSoundTimer: RepeatingTimer?
     
     private var dexcomShareSessionId: String?
-    
+
+    /// the accountId returned by the authentication step - needed to build the signed request used by the events endpoint
+    private var dexcomShareAccountId: String?
+
+    /// reference to TreatmentEntryAccessor - used to dedupe insulin treatments imported from Dexcom Share
+    private var treatmentEntryAccessor: TreatmentEntryAccessor
+
+    /// timestamp of the last attempt to fetch events (insulin) from Dexcom Share - used to throttle the events fetch
+    private var timeStampLastEventsFetchAttempt: Date?
+
+    /// how many times the events fetch has failed since the last success - used to avoid spamming the trace log
+    private var eventsFetchFailedCount = 0
+
     /// timestamp of last received reading. Used to scale the maxCount size when requesting data from Dexcom Share
     private var timeStampLastBgReading: Date?
     
@@ -65,6 +78,7 @@ class DexcomShareFollowManager: NSObject {
         // initialize non optional private properties
         self.coreDataManager = coreDataManager
         self.bgReadingsAccessor = BgReadingsAccessor(coreDataManager: coreDataManager)
+        self.treatmentEntryAccessor = TreatmentEntryAccessor(coreDataManager: coreDataManager)
         self.followerDelegate = followerDelegate
         
         // initialize the sessionId
@@ -91,7 +105,8 @@ class DexcomShareFollowManager: NSObject {
         UserDefaults.standard.addObserver(self, forKeyPath: UserDefaults.Key.followerDataSourceType.rawValue, options: .new, context: nil)
         UserDefaults.standard.addObserver(self, forKeyPath: UserDefaults.Key.dexcomShareAccountName.rawValue, options: .new, context: nil)
         UserDefaults.standard.addObserver(self, forKeyPath: UserDefaults.Key.dexcomSharePassword.rawValue, options: .new, context: nil)
-        
+        UserDefaults.standard.addObserver(self, forKeyPath: UserDefaults.Key.importInsulinFromDexcomShare.rawValue, options: .new, context: nil)
+
         self.verifyUserDefaultsAndStartOrStopFollowMode()
     }
     
@@ -102,7 +117,8 @@ class DexcomShareFollowManager: NSObject {
         UserDefaults.standard.removeObserver(self, forKeyPath: UserDefaults.Key.followerDataSourceType.rawValue)
         UserDefaults.standard.removeObserver(self, forKeyPath: UserDefaults.Key.dexcomShareAccountName.rawValue)
         UserDefaults.standard.removeObserver(self, forKeyPath: UserDefaults.Key.dexcomSharePassword.rawValue)
-        
+        UserDefaults.standard.removeObserver(self, forKeyPath: UserDefaults.Key.importInsulinFromDexcomShare.rawValue)
+
         // stop keep-alive helpers
         self.disableSuspensionPrevention()
         
@@ -223,6 +239,10 @@ class DexcomShareFollowManager: NSObject {
             } catch {
                 trace("    in download, error = %{public}@", log: self.log, category: ConstantsLog.categoryDexcomShareFollowManager, type: .error, error.localizedDescription)
             }
+
+            // if enabled, also try to import insulin events logged in the Dexcom app - failures are handled (and throttled) inside the function and never disturb the glucose download
+            await self.downloadAndProcessInsulinEvents()
+
             // rescheduling the timer must be done on the main actor
             // we do it here at the end of the function so that it is always rescheduled once a valid connection is established, irrespective of whether we get values.
             await MainActor.run { [weak self] in
@@ -310,6 +330,9 @@ class DexcomShareFollowManager: NSObject {
         if accountId.isEmpty {
             throw DexcomShareFollowError.authFailed
         }
+
+        // keep the accountId, it's needed to build the signed request used by the events (insulin) endpoint
+        self.dexcomShareAccountId = accountId
         
         // Step 2/2 - LOGIN: Login by accountId
         var loginRequest = URLRequest(url: region.baseURL.appendingPathComponent(ConstantsDexcomShare.dexcomShareFollowLoginPath))
@@ -469,6 +492,298 @@ class DexcomShareFollowManager: NSObject {
         }
     }
     
+    // MARK: - insulin events import
+
+    /// Downloads events (insulin) from Dexcom Share and stores new insulin entries as treatments.
+    /// Only runs if the importInsulinFromDexcomShare setting is enabled and we're in Dexcom Share follower mode.
+    /// Attempts are throttled and failures never disturb the glucose download.
+    private func downloadAndProcessInsulinEvents() async {
+        // setting must be enabled and we must be in dexcom share follower mode with a valid session
+        guard UserDefaults.standard.importInsulinFromDexcomShare else { return }
+        guard !UserDefaults.standard.isMaster, UserDefaults.standard.followerDataSourceType == .dexcomShare else { return }
+        guard let dexcomShareSessionId = self.dexcomShareSessionId, UserDefaults.standard.dexcomShareRegion != .none else { return }
+
+        // throttle the events fetch - insulin events are logged only occasionally, no need to hammer the server every minute
+        if let timeStampLastEventsFetchAttempt = timeStampLastEventsFetchAttempt, Date().timeIntervalSince(timeStampLastEventsFetchAttempt) < ConstantsDexcomShare.dexcomShareEventsFetchIntervalInSeconds {
+            return
+        }
+        timeStampLastEventsFetchAttempt = Date()
+
+        do {
+            let insulinEvents = try await downloadLatestEvents(sessionId: dexcomShareSessionId)
+
+            // reset the failure counter on success
+            eventsFetchFailedCount = 0
+
+            guard !insulinEvents.isEmpty else { return }
+
+            // treatments must be created on the main thread because the main managedObjectContext is used
+            await MainActor.run { [weak self] in
+                self?.processInsulinEvents(insulinEvents)
+            }
+        } catch {
+            // log the first failure as error, subsequent failures as debug to avoid filling the trace log -
+            // the events endpoint requires a device-key signed request and Dexcom may reject our best-effort signature (see downloadLatestEvents)
+            eventsFetchFailedCount += 1
+            if eventsFetchFailedCount == 1 {
+                trace("    in downloadAndProcessInsulinEvents, failed to fetch events from Dexcom Share (insulin import will keep retrying in the background), error = %{public}@", log: self.log, category: ConstantsLog.categoryDexcomShareFollowManager, type: .error, error.localizedDescription)
+            } else {
+                trace("    in downloadAndProcessInsulinEvents, events fetch failed again (%{public}@ times), error = %{public}@", log: self.log, category: ConstantsLog.categoryDexcomShareFollowManager, type: .debug, eventsFetchFailedCount.description, error.localizedDescription)
+            }
+        }
+    }
+
+    /// Stores insulin events downloaded from Dexcom Share as insulin treatments, deduping against existing treatments.
+    /// Must be called on the main thread.
+    private func processInsulinEvents(_ insulinEvents: [(timeStamp: Date, value: Double)]) {
+        var didAddTreatment = false
+
+        for insulinEvent in insulinEvents {
+            // sanity check on the value
+            guard insulinEvent.value > 0, insulinEvent.value < 200 else { continue }
+
+            // dedupe : skip if a non-deleted insulin treatment with (almost) the same timestamp and amount already exists
+            let existingTreatments = treatmentEntryAccessor.getTreatments(fromDate: insulinEvent.timeStamp.addingTimeInterval(-ConstantsHealthKit.carbsImportDedupeWindowInSeconds), toDate: insulinEvent.timeStamp.addingTimeInterval(ConstantsHealthKit.carbsImportDedupeWindowInSeconds), on: coreDataManager.mainManagedObjectContext)
+            if existingTreatments.contains(where: { $0.treatmentType == .Insulin && !$0.treatmentdeleted && abs($0.value - insulinEvent.value) < 0.01 }) { continue }
+
+            _ = TreatmentEntry(date: insulinEvent.timeStamp, value: insulinEvent.value, treatmentType: .Insulin, nightscoutEventType: nil, enteredBy: "Dexcom Share", nsManagedObjectContext: coreDataManager.mainManagedObjectContext)
+
+            didAddTreatment = true
+
+            trace("    in processInsulinEvents, imported insulin treatment from Dexcom Share, timestamp = %{public}@, units = %{public}@", log: log, category: ConstantsLog.categoryDexcomShareFollowManager, type: .info, insulinEvent.timeStamp.description, insulinEvent.value.description)
+        }
+
+        if didAddTreatment {
+            coreDataManager.saveChanges()
+
+            // trigger an update of the chart and the treatments list - the HealthKitManager also observes this counter and will write the new insulin treatments to Apple Health
+            UserDefaults.standard.nightscoutTreatmentsUpdateCounter = UserDefaults.standard.nightscoutTreatmentsUpdateCounter + 1
+        }
+    }
+
+    /// Downloads the latest events from Dexcom Share and returns the insulin events found as (timestamp, units) tuples.
+    ///
+    /// The events endpoint (Publisher/ReadEvents) is part of Dexcom's newer Share API generation and expects a 'signedRequest'
+    /// parameter : three base64url encoded segments (header.payload.signature), similar to a JWT. The signature is normally
+    /// computed with a device key that is provisioned to the official Dexcom apps. That key is not available to third party
+    /// apps, so the signature built here is a best-effort HMAC based on the session - if Dexcom rejects it, the error is
+    /// handled gracefully by the caller and the insulin import simply stays inactive.
+    /// - Parameters:
+    ///     - sessionId: the active Dexcom Share session id
+    /// - Returns: array of (timestamp, units) tuples for insulin events
+    /// - Throws: DexcomShareFollowError or URL/network errors
+    private func downloadLatestEvents(sessionId: String) async throws -> [(timeStamp: Date, value: Double)] {
+        let region = UserDefaults.standard.dexcomShareRegion
+
+        guard let componentsInitial = URLComponents(url: region.baseURL.appendingPathComponent(ConstantsDexcomShare.dexcomShareFollowReadEventsPath), resolvingAgainstBaseURL: false) else { throw DexcomShareFollowError.urlError }
+        var components = componentsInitial
+
+        components.queryItems = [
+            .init(name: "sessionId", value: sessionId),
+            .init(name: "signedRequest", value: buildSignedEventsRequest(sessionId: sessionId, region: region))
+        ]
+
+        guard let url = components.url else { throw DexcomShareFollowError.urlError }
+        var request = URLRequest(url: url)
+
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.addValue("Dexcom Share/3.0.2.11 CFNetwork/1390 Darwin/22.0.0", forHTTPHeaderField: "User-Agent")
+        request.httpBody = Data()
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        if let http = response as? HTTPURLResponse, http.statusCode == 401 {
+            throw DexcomShareFollowError.sessionExpired
+        }
+
+        if let http = response as? HTTPURLResponse, http.statusCode >= 400 {
+            throw DexcomShareFollowError.eventsFetchFailed
+        }
+
+        return parseInsulinEvents(fromEventsResponse: data)
+    }
+
+    /// Builds the signed request expected by the Dexcom Share events endpoint : header.payload.signature, all base64url encoded.
+    private func buildSignedEventsRequest(sessionId: String, region: DexcomShareRegion) -> String {
+        let iso8601DateFormatter = ISO8601DateFormatter()
+        iso8601DateFormatter.formatOptions = [.withInternetDateTime]
+
+        // request events of the last 24 hours
+        let lastSyncTimestamp = iso8601DateFormatter.string(from: Date(timeIntervalSinceNow: -ConstantsDexcomShare.dexcomShareEventsFetchWindowInHours * 3600.0))
+
+        let header: [String: Any] = [
+            "AccId": dexcomShareAccountId ?? "",
+            "AppId": region.applicationID,
+            "IsZip": 0,
+            "Timestamp": iso8601DateFormatter.string(from: Date())
+        ]
+
+        let payload: [String: Any] = [
+            "SessionId": sessionId,
+            "LastSyncTimestamps": ["Event": lastSyncTimestamp]
+        ]
+
+        guard let headerData = try? JSONSerialization.data(withJSONObject: header, options: [.sortedKeys]),
+              let payloadData = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]) else { return "" }
+
+        let headerAndPayload = base64UrlEncode(headerData) + "." + base64UrlEncode(payloadData)
+
+        // best-effort signature : HMAC-SHA256 keyed with the session id, truncated to 16 bytes (the length observed in requests made by the official apps)
+        let key = SymmetricKey(data: Data(sessionId.utf8))
+        let signature = Data(HMAC<SHA256>.authenticationCode(for: Data(headerAndPayload.utf8), using: key).prefix(16))
+
+        return headerAndPayload + "." + base64UrlEncode(signature)
+    }
+
+    /// base64url encoding (base64 with '+' -> '-', '/' -> '_' and no padding), as used in the Dexcom signed request
+    private func base64UrlEncode(_ data: Data) -> String {
+        return data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    /// Parses the events response and returns the insulin events found as (timestamp, units) tuples.
+    ///
+    /// The exact response schema of the events endpoint is not publicly documented, so this parser is deliberately tolerant :
+    /// it unwraps an optional base64/gzip envelope, then recursively scans the JSON for dictionaries that look like insulin
+    /// events (a type field containing 'insulin', a numeric value and a parseable timestamp).
+    private func parseInsulinEvents(fromEventsResponse data: Data) -> [(timeStamp: Date, value: Double)] {
+        var jsonData = data
+
+        // the response can be a JSON envelope with a base64 encoded (and possibly gzipped) payload
+        if let envelope = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            for payloadKey in ["Payload", "Body", "Data"] {
+                if let payloadString = envelope[payloadKey] as? String, let payloadData = Data(base64Encoded: payloadString) {
+                    jsonData = gunzipIfNeeded(payloadData)
+                    break
+                }
+            }
+        }
+
+        guard let jsonObject = try? JSONSerialization.jsonObject(with: jsonData) else { return [] }
+
+        var insulinEvents: [(timeStamp: Date, value: Double)] = []
+        scanForInsulinEvents(in: jsonObject, appendingTo: &insulinEvents)
+
+        // sort by newest first
+        insulinEvents.sort { $0.timeStamp > $1.timeStamp }
+
+        return insulinEvents
+    }
+
+    /// Recursively scans a JSON object for dictionaries that look like insulin events and appends them to the array.
+    private func scanForInsulinEvents(in jsonObject: Any, appendingTo insulinEvents: inout [(timeStamp: Date, value: Double)]) {
+        if let array = jsonObject as? [Any] {
+            for element in array {
+                scanForInsulinEvents(in: element, appendingTo: &insulinEvents)
+            }
+        } else if let dictionary = jsonObject as? [String: Any] {
+            // does this dictionary look like an insulin event?
+            var isInsulinEvent = false
+            for typeKey in ["EventType", "Type", "EventName", "SubType", "Name"] {
+                if let typeValue = dictionary[typeKey] as? String, typeValue.lowercased().contains("insulin") {
+                    isInsulinEvent = true
+                    break
+                }
+            }
+
+            if isInsulinEvent, let value = parseEventValue(in: dictionary), let timeStamp = parseEventTimestamp(in: dictionary) {
+                insulinEvents.append((timeStamp: timeStamp, value: value))
+            } else {
+                // not an insulin event (or missing fields) - keep scanning nested structures
+                for nestedValue in dictionary.values {
+                    scanForInsulinEvents(in: nestedValue, appendingTo: &insulinEvents)
+                }
+            }
+        }
+    }
+
+    /// Finds the insulin amount in an event dictionary.
+    private func parseEventValue(in dictionary: [String: Any]) -> Double? {
+        for valueKey in ["Value", "InsulinValue", "Amount", "Units", "Dose"] {
+            if let doubleValue = dictionary[valueKey] as? Double, doubleValue > 0 {
+                return doubleValue
+            }
+            if let intValue = dictionary[valueKey] as? Int, intValue > 0 {
+                return Double(intValue)
+            }
+            if let stringValue = dictionary[valueKey] as? String, let doubleValue = Double(stringValue), doubleValue > 0 {
+                return doubleValue
+            }
+        }
+        return nil
+    }
+
+    /// Finds and parses the timestamp in an event dictionary. Accepts Dexcom "/Date(...)/" strings, ISO8601 strings and epoch milliseconds.
+    private func parseEventTimestamp(in dictionary: [String: Any]) -> Date? {
+        for timeKey in ["ST", "DT", "WT", "SystemTime", "DisplayTime", "EventTime", "Timestamp", "RecordedTimestamp", "EventTimestamp"] {
+            guard let timeValue = dictionary[timeKey] else { continue }
+
+            if let timeString = timeValue as? String {
+                // dexcom "/Date(...)/" format
+                if let date = parseDexcomDate(dexcomDateString: timeString) {
+                    return date
+                }
+                // ISO8601, with or without fractional seconds
+                let iso8601DateFormatter = ISO8601DateFormatter()
+                iso8601DateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let date = iso8601DateFormatter.date(from: timeString) {
+                    return date
+                }
+                iso8601DateFormatter.formatOptions = [.withInternetDateTime]
+                if let date = iso8601DateFormatter.date(from: timeString) {
+                    return date
+                }
+            } else if let milliseconds = timeValue as? Double, milliseconds > 1_000_000_000_000 {
+                return Date(timeIntervalSince1970: milliseconds / 1000)
+            }
+        }
+        return nil
+    }
+
+    /// If the data starts with the gzip magic bytes, strips the gzip header/trailer and inflates the raw deflate stream. Returns the data unchanged otherwise (or if decompression fails).
+    private func gunzipIfNeeded(_ data: Data) -> Data {
+        // gzip magic bytes 0x1f 0x8b, followed by compression method 0x08 (deflate)
+        guard data.count > 18, data[data.startIndex] == 0x1f, data[data.startIndex + 1] == 0x8b, data[data.startIndex + 2] == 0x08 else { return data }
+
+        let flags = data[data.startIndex + 3]
+        var headerLength = 10
+
+        // FEXTRA
+        if flags & 0x04 != 0 {
+            guard data.count > headerLength + 2 else { return data }
+            let extraLength = Int(data[data.startIndex + headerLength]) | (Int(data[data.startIndex + headerLength + 1]) << 8)
+            headerLength += 2 + extraLength
+        }
+        // FNAME - null terminated
+        if flags & 0x08 != 0 {
+            while headerLength < data.count, data[data.startIndex + headerLength] != 0 { headerLength += 1 }
+            headerLength += 1
+        }
+        // FCOMMENT - null terminated
+        if flags & 0x10 != 0 {
+            while headerLength < data.count, data[data.startIndex + headerLength] != 0 { headerLength += 1 }
+            headerLength += 1
+        }
+        // FHCRC
+        if flags & 0x02 != 0 {
+            headerLength += 2
+        }
+
+        guard data.count > headerLength + 8 else { return data }
+
+        // strip gzip header and 8-byte trailer (crc32 + size), leaving the raw deflate stream that NSData can decompress using the zlib algorithm
+        let deflateData = data.subdata(in: (data.startIndex + headerLength)..<(data.endIndex - 8))
+
+        if let inflatedData = try? (deflateData as NSData).decompressed(using: .zlib) as Data {
+            return inflatedData
+        }
+
+        return data
+    }
+
     /// Disables suspension prevention by removing background/foreground closures and suspending timers
     private func disableSuspensionPrevention() {
         // stop the timer for now, might be already suspended but doesn't harm
@@ -584,6 +899,14 @@ class DexcomShareFollowManager: NSObject {
         if let keyPath = keyPath {
             if let keyPathEnum = UserDefaults.Key(rawValue: keyPath) {
                 switch keyPathEnum {
+                case UserDefaults.Key.importInsulinFromDexcomShare:
+                    // if the user just enabled the insulin import, reset the throttle and trigger a download cycle so the import starts immediately
+                    if UserDefaults.standard.importInsulinFromDexcomShare {
+                        self.timeStampLastEventsFetchAttempt = nil
+                        self.eventsFetchFailedCount = 0
+                        self.download()
+                    }
+
                 case UserDefaults.Key.isMaster, UserDefaults.Key.followerDataSourceType, UserDefaults.Key.dexcomShareAccountName, UserDefaults.Key.dexcomSharePassword:
                     trace("UserDefaults key changed: %{public}@", log: self.log, category: ConstantsLog.categoryDexcomShareFollowManager, type: .debug, keyPathEnum.rawValue)
                     // change by user, should not be done within 200 ms
@@ -614,6 +937,7 @@ private enum DexcomShareFollowError: Error {
     case urlError
     case sessionExpired
     case noRegion
+    case eventsFetchFailed
 }
 
 // MARK: CustomStringConvertible
@@ -638,6 +962,8 @@ extension DexcomShareFollowError: CustomStringConvertible {
             return "Session Expired"
         case .noRegion:
             return "No region has been set/detected"
+        case .eventsFetchFailed:
+            return "Events (insulin) fetch failed"
         }
     }
 }
